@@ -1,0 +1,5 @@
+name: PandoraCrates
+version: ${project.version}
+main: me.nanigans.pandoracrates.PandoraCrates
+authors: [ProNanigans]
+description: Pandora Crates plugin
