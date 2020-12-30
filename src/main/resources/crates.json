@@ -1,5 +1,20 @@
 {
-
-  
+  "_comment": "Command is the command to get the item to the player. **NO / at the start**",
+  "_comment1": "Chance is the chance to get an item out of 100. Try to keep the entire crate out of 100",
+  "Epic_Crate": {
+    "HoverName": "&cEpic Crate",
+    "rewards": {
+      "1": {
+        "command": "i {player} dirt 64",
+        "amount": 64,
+        "chance": 65.0
+      },
+      "2": {
+        "command": "ceggive {player} levitating 25",
+        "amount": 25,
+        "chance": 45
+      }
+    }
+  }
 
 }
