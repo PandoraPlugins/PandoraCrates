@@ -2,6 +2,7 @@
   "_comment": "Command is the command to get the item to the player. **NO / at the start**",
   "_comment1": "Chance is the chance to get an item out of 100. Try to keep the entire crate out of 100",
   "AllCrates": {
+    "invalidCrateBounceVelocity": 2.0,
     "Epic_Crate": {
       "Hologram_Name": "&cEpic Crate",
       "Hologram_Height": 1,
@@ -22,6 +23,7 @@
         "uses": 3,
         "rewardsPerKey": 2,
         "glow": true,
+        "invalidCrateMsg": "&cThis key can only be used on epic crates",
         "metaData": {
           "displayName": "Epic Crate Key",
           "lore": ["This key has {uses} uses left", "Each key gives you 2 rewards", "This key can be used with the epic crates"]

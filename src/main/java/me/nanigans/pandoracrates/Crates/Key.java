@@ -20,7 +20,7 @@ public class Key {
     private final Map<String, Object> crateInfo;
     private final Map<String, Object> keyInfo;
     private final String name;
-    private final static String crateEnum = "CRATEKEY";
+    public final static String crateEnum = "CRATEKEY";
 
     public Key(Map<String, Object> crateInfo, String crateName){
         this.crateInfo = crateInfo;
