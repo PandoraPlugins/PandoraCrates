@@ -1,6 +1,9 @@
 package me.nanigans.pandoracrates;
 
+import me.nanigans.pandoracrates.Commands.CrateTab;
+import me.nanigans.pandoracrates.Commands.CreateCrate;
 import me.nanigans.pandoracrates.Commands.KeyGive;
+import me.nanigans.pandoracrates.Commands.KeyTab;
 import me.nanigans.pandoracrates.Utils.Glow;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,8 +15,10 @@ public final class PandoraCrates extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-
         getCommand("keygive").setExecutor(new KeyGive());
+        getCommand("createcrate").setExecutor(new CreateCrate());
+        getCommand("createcrate").setTabCompleter(new CrateTab());
+        getCommand("keygive").setTabCompleter(new KeyTab());
 
         registerGlow();
     }

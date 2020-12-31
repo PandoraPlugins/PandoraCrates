@@ -3,7 +3,8 @@
   "_comment1": "Chance is the chance to get an item out of 100. Try to keep the entire crate out of 100",
   "AllCrates": {
     "Epic_Crate": {
-      "HoverName": "&cEpic Crate",
+      "Hologram_Name": "&cEpic Crate",
+      "Hologram_Height": 1,
       "rewards": {
         "1": {
           "command": "i {player} dirt 64",
