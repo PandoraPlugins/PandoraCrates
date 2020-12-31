@@ -2,6 +2,7 @@ package me.nanigans.pandoracrates.Crates;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import de.slikey.effectlib.Effect;
 import de.slikey.effectlib.EffectType;
 import de.slikey.effectlib.effect.SphereEffect;
 import de.slikey.effectlib.effect.StarEffect;
@@ -19,7 +20,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -39,12 +39,14 @@ public class CrateSelector implements Listener {
     private final String name;
     private final ItemStack key;
     private WarpEffect warp;
+    private SphereEffect sphere;
     private ArmorStand stand;
     private final static PandoraCrates plugin = PandoraCrates.getPlugin(PandoraCrates.class);
     private final List<ArmorStand> armorStands = new ArrayList<>();
     private final Reward reward;
     private int clicksLeft;
     private ArmorStand[] clickedStands;
+    private List<WarpEffect> chestWarps = new ArrayList<>();
 
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
@@ -72,7 +74,7 @@ public class CrateSelector implements Listener {
                     rightClicked.setPassenger(item);
                     item.setCustomName(ChatColor.translateAlternateColorCodes('&', randomRewards.get("displayName").toString()));
                     item.setCustomNameVisible(true);
-                    this.reward.getRewardCmds().add(randomRewards.get("command").toString());
+                    this.reward.getRewardCmds().add(randomRewards);
                     rightClicked.setCustomNameVisible(false);
 
                     player.getWorld().playSound(player.getLocation(), Sound.valueOf("FIREWORK_BLAST"), 10, 1);
@@ -109,12 +111,16 @@ public class CrateSelector implements Listener {
             effect.particle = ParticleEffect.SMOKE_NORMAL;
             effect.asynchronous = true;
             effect.radius = 0.35;
+            effect.particles = 40;
             effect.type = EffectType.INSTANT;
             effect.start();
             effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
             effect.callback = armorStand::remove;
+            armorStand.getWorld().playSound(armorStand.getEyeLocation(), Sound.valueOf("EXPLODE"), 5, 1);
 
         }
+        chestWarps.forEach(Effect::cancel);
+        sphere.cancel();
 
         new BukkitRunnable() {
             @Override
@@ -132,8 +138,8 @@ public class CrateSelector implements Listener {
                         for (ArmorStand clickedStand : clickedStands) {
                             clickedStand.remove();
                             clickedStand.getPassenger().remove();
-                            giveRewards();
                         }
+                        giveRewards();
                     }
                 }.runTaskLaterAsynchronously(plugin, 10);
             }
@@ -141,11 +147,18 @@ public class CrateSelector implements Listener {
     }
 
     private void giveRewards(){
-
-        for (String rewardCmd : this.reward.getRewardCmds()) {
-            Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.replaceAll("\\{player}", player.getName()));
-        }
-
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if(player.isOnGround()) {
+                    for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                        Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                    }
+                }else{
+                    giveRewards();
+                }
+            }
+        }.runTaskLaterAsynchronously(plugin, 10);
     }
 
     public void startSelector(){
@@ -164,6 +177,16 @@ public class CrateSelector implements Listener {
                 warp.radius = 0.5F;
                 warp.infinite();
                 warp.start();
+
+                sphere = new SphereEffect(PandoraCrates.manager);
+                sphere.radius = 3.5F;
+                sphere.asynchronous = true;
+                sphere.particle = ParticleEffect.REDSTONE;
+                sphere.color = Color.fromRGB(211, 211, 211);
+                sphere.particles = 100;
+                sphere.setDynamicOrigin(new DynamicLocation(player));
+                sphere.infinite();
+                sphere.start();
 
                 final Location location = player.getLocation();
                 stand = player.getWorld().spawn(location, ArmorStand.class);
@@ -192,12 +215,24 @@ public class CrateSelector implements Listener {
                     stand.setHeadPose(new EulerAngle(pitch, yaw, 0));
                     stand.setVelocity(facing.multiply(-0.5));
                     armorStands.add(stand);
+
                 }
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         for (ArmorStand armorStand : armorStands) {
                             armorStand.setGravity(false);
+                            WarpEffect warpE = new WarpEffect(PandoraCrates.manager);
+                            warpE.asynchronous = true;
+                            warpE.particle = ParticleEffect.SPELL;
+                            warpE.particles = 5;
+                            warpE.radius = 0.25F;
+                            warpE.offset = new Vector(0, -0.5, 0);
+                            warpE.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
+                            warpE.grow = 0;
+                            warpE.infinite();
+                            warpE.start();
+                            chestWarps.add(warpE);
                         }
                     }
                 }.runTaskLaterAsynchronously(plugin, 10);

@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Reward {
     private final Map<String, Double> chanceMap = new HashMap<>();
     private final Map<String, Object> rewardMap;
-    private final List<String> rewardCmds = new ArrayList<>();
+    private final List<Map<String, Object>> rewardCmds = new ArrayList<>();
 
     public Reward(CrateSelector map){
         this.rewardMap = ((Map<String, Object>) map.getData().get("rewards"));
@@ -37,7 +37,7 @@ public class Reward {
         return null;
     }
 
-    public List<String> getRewardCmds() {
+    public List<Map<String, Object>> getRewardCmds() {
         return rewardCmds;
     }
 }
