@@ -1,5 +1,6 @@
 package me.nanigans.pandoracrates.Events;
 
+import me.nanigans.pandoracrates.Crates.CrateSelector;
 import me.nanigans.pandoracrates.Crates.Crates;
 import me.nanigans.pandoracrates.Crates.Key;
 import me.nanigans.pandoracrates.Utils.JsonUtil;
@@ -29,7 +30,8 @@ public class CrateClickEvents implements Listener {
                         final String nbt = NBTData.getNBT(item, Key.crateEnum);
 
                         final String name = Crates.getName(event.getClickedBlock());
-                        final boolean allCrates = ((Map<String, Object>) JsonUtil.getData("AllCrates")).containsKey(name);
+                        final Map<String, Object> crates = (Map<String, Object>) JsonUtil.getData("AllCrates");
+                        final boolean allCrates = crates.containsKey(name);
                         if (allCrates) {
                             if(!nbt.equals(name)) {
                                 player.getWorld().playSound(player.getLocation(), Sound.valueOf("ENDERDRAGON_WINGS"), 1, 1);
@@ -37,7 +39,8 @@ public class CrateClickEvents implements Listener {
                                 return;
                             }
 
-                            
+                            final CrateSelector crateSelector = new CrateSelector(player, ((Map<String, Object>) crates.get(nbt)), name, event.getItem());
+                            crateSelector.startSelector();
 
                         }
                 }

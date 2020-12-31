@@ -3,10 +3,12 @@ package me.nanigans.pandoracrates;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import de.slikey.effectlib.EffectManager;
 import me.nanigans.pandoracrates.Commands.CrateTab;
 import me.nanigans.pandoracrates.Commands.CreateCrate;
 import me.nanigans.pandoracrates.Commands.KeyGive;
 import me.nanigans.pandoracrates.Commands.KeyTab;
+import me.nanigans.pandoracrates.Events.CrateClickEvents;
 import me.nanigans.pandoracrates.Utils.CustomizedObjectTypeAdapter;
 import me.nanigans.pandoracrates.Utils.Glow;
 import org.bukkit.Bukkit;
@@ -24,10 +26,12 @@ public final class PandoraCrates extends JavaPlugin {
     GsonBuilder gsonBuilder = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<Map<String, Object>>(){}.getType(),  new CustomizedObjectTypeAdapter());
     public HashMap map = new HashMap<>();
+    public static EffectManager manager;
 
     @Override
     public void onEnable() {
 
+        manager = new EffectManager(PandoraCrates.getPlugin(PandoraCrates.class));
         if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays")) {
             getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
             getLogger().severe("*** This plugin will be disabled. ***");
@@ -40,6 +44,7 @@ public final class PandoraCrates extends JavaPlugin {
         getCommand("createcrate").setExecutor(new CreateCrate());
         getCommand("createcrate").setTabCompleter(new CrateTab());
         getCommand("keygive").setTabCompleter(new KeyTab());
+        getServer().getPluginManager().registerEvents(new CrateClickEvents(), this);
         File configFile = new File(getDataFolder(), "crates.json");
 
         if(!configFile.exists()) {
