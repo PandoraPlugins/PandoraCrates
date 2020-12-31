@@ -3,3 +3,11 @@ version: ${project.version}
 main: me.nanigans.pandoracrates.PandoraCrates
 authors: [ProNanigans]
 description: Pandora Crates plugin
+commands:
+  keygive:
+    usage: /keygive <player> <key name> <amount>
+    description: Gives the player a key
+permissions:
+  Crates.KeyGive:
+    description: Allows the user to give out new keys
+    default: op
