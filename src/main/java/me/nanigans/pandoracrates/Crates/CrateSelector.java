@@ -6,16 +6,20 @@ import de.slikey.effectlib.effect.WarpEffect;
 import de.slikey.effectlib.util.DynamicLocation;
 import de.slikey.effectlib.util.ParticleEffect;
 import me.nanigans.pandoracrates.PandoraCrates;
+import me.nanigans.pandoracrates.Utils.ItemUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -34,18 +38,47 @@ public class CrateSelector implements Listener {
     private final Map<String, Object> data;
     private final String name;
     private final ItemStack key;
-    private boolean preventVelocity = false;
     private WarpEffect warp;
     private ArmorStand stand;
     private final static PandoraCrates plugin = PandoraCrates.getPlugin(PandoraCrates.class);
-    private List<ArmorStand> armorStands = new ArrayList<>();
+    private final List<ArmorStand> armorStands = new ArrayList<>();
+    private final Reward reward;
+    private int clicksLeft;
 
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
         this.data = crateData;
         this.name = crateName;
         this.key = key;
+        this.clicksLeft = Integer.parseInt(((Map<String, Object>) crateData.get("key")).get("rewardsPerKey").toString());
+        this.reward = new Reward(this);
     }
+
+    @EventHandler
+    public void armorStandClick(PlayerInteractAtEntityEvent event){
+        System.out.println("event.getClickedPosition() = " + event.getClickedPosition());
+        System.out.println("event.getRightClicked() = " + event.getRightClicked());
+        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
+            event.setCancelled(true);
+            final Entity rightClicked = event.getRightClicked();
+            if(rightClicked instanceof ArmorStand){
+                if(rightClicked.getPassenger() == null) {
+                    final Map<String, Object> randomRewards = reward.getRandomRewards();
+                    System.out.println("reward = " + randomRewards);
+                    ItemStack reward = ItemUtils.createItem(randomRewards.get("material").toString(), null);
+                    final Item item = player.getWorld().dropItem(player.getLocation(), reward);
+                    item.setPickupDelay(Integer.MAX_VALUE);
+                    rightClicked.setPassenger(item);
+                    item.setCustomName(ChatColor.translateAlternateColorCodes('&', randomRewards.get("displayName").toString()));
+                    item.setCustomNameVisible(true);
+                    this.reward.getRewardCmds().add(randomRewards.get("command").toString());
+                }
+
+            }
+        }
+
+    }
+
 
     public void startSelector(){
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -70,26 +103,27 @@ public class CrateSelector implements Listener {
                 stand.setVisible(false);
                 stand.setPassenger(player);
 
-                final List<Location> locations = circleParts(location.add(0, 2, 0), 2, 6);
+                final int amount = Integer.parseInt(data.get("Crate_Chest_Number").toString());
+                final List<Location> locations = circleParts(location.add(0, 2, 0), 2, amount);
                 Vector pVec = player.getLocation().toVector();
 
                 ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
                 Location pLoc = player.getEyeLocation();
                 pLoc.add(0, 3, 0);
                 for (final Location loc : locations) {
-
                     ArmorStand stand = loc.getWorld().spawn(pLoc, ArmorStand.class);
                     stand.setHelmet(item);
                     stand.setVisible(false);
                     stand.setSmall(true);
+                    stand.setCustomName("Click Me!");
+                    stand.setCustomNameVisible(true);
                     final Vector vector = loc.toVector().subtract(new Vector(0, 2, 0));
-                    Vector facing = pVec.clone().subtract(vector).normalize();
-                    double yaw = -Math.atan2(facing.getX(), facing.getZ());
-                    double pitch = -Math.atan2(facing.getY(), Math.hypot(facing.getX(), facing.getZ()));
+                    final Vector facing = pVec.clone().subtract(vector).normalize();
+                    final double yaw = -Math.atan2(facing.getX(), facing.getZ());
+                    final double pitch = -Math.atan2(facing.getY(), Math.hypot(facing.getX(), facing.getZ()));
                     stand.setHeadPose(new EulerAngle(pitch, yaw, 0));
                     stand.setVelocity(facing.multiply(-0.5));
                     armorStands.add(stand);
-
                 }
                 new BukkitRunnable() {
                     @Override
@@ -126,7 +160,12 @@ public class CrateSelector implements Listener {
 
             stand.remove();
             warp.cancel();
-            this.armorStands.forEach(Entity::remove);
+            this.armorStands.forEach(i -> {
+                if(i.getPassenger() != null){
+                    i.getPassenger().remove();
+                }
+                i.remove();
+            });
             HandlerList.unregisterAll(this);
 
         }
@@ -156,4 +195,20 @@ public class CrateSelector implements Listener {
         return skull;
     }
 
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Map<String, Object> getData() {
+        return data;
+    }
+
+    public static PandoraCrates getPlugin() {
+        return plugin;
+    }
+
+    public List<ArmorStand> getArmorStands() {
+        return armorStands;
+    }
 }

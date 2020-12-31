@@ -8,7 +8,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_8_R3.BlockPosition;
 import net.minecraft.server.v1_8_R3.TileEntity;
 import net.minecraft.server.v1_8_R3.TileEntityChest;
-import net.minecraft.server.v1_8_R3.World;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -75,4 +74,15 @@ public class Crates {
         return ((TileEntityChest) te).getName();
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public static PandoraCrates getPlugin() {
+        return plugin;
+    }
+
+    public Map<String, Object> getCrateInfo() {
+        return crateInfo;
+    }
 }

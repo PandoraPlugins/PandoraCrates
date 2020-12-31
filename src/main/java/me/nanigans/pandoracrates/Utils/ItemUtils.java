@@ -1,5 +1,6 @@
 package me.nanigans.pandoracrates.Utils;
 
+import org.apache.commons.lang3.EnumUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -15,12 +16,17 @@ public class ItemUtils {
      */
     public static ItemStack createItem(String material, String name, String... nbt){
 
+        if(EnumUtils.isValidEnum(Material.class, material)){
+            return createItem(Material.valueOf(material), name, nbt);
+        }
+
         ItemStack item = new ItemStack(Material.getMaterial(Integer.parseInt(material.split("/")[0])),
                 1, Byte.parseByte(material.split("/")[1]));
-
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        item.setItemMeta(meta);
+        if(name != null) {
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(name);
+            item.setItemMeta(meta);
+        }
         item = NBTData.setNBT(item, nbt);
         return item;
 
@@ -35,9 +41,11 @@ public class ItemUtils {
     public static ItemStack createItem(Material material, String name, String... nbt){
 
         ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        item.setItemMeta(meta);
+        if(name != null) {
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(name);
+            item.setItemMeta(meta);
+        }
         item = NBTData.setNBT(item, nbt);
         return item;
 

@@ -44,11 +44,7 @@ public class Key {
 
         final String material = keyInfo.get("material").toString();
         final Map<String, Object> keyMeta = ((Map<String, Object>) keyInfo.get("metaData"));
-        final boolean validEnum = EnumUtils.isValidEnum(Material.class, material);
-        final ItemStack item = validEnum ? ItemUtils.createItem(Material.valueOf(material),
-                    ChatColor.translateAlternateColorCodes('&', keyMeta.get("displayName").toString()), crateEnum+"~"+this.name) :
-            ItemUtils.createItem(material,
-                    ChatColor.translateAlternateColorCodes('&', keyMeta.get("displayName").toString()), crateEnum+"~"+this.name);
+        final ItemStack item = ItemUtils.createItem(material, keyMeta.get("displayName").toString(), crateEnum+"~"+name);
 
         final ItemMeta meta = item.getItemMeta();
         meta.setLore(
