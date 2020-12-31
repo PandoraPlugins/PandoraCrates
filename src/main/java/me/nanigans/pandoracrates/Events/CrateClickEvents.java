@@ -33,12 +33,14 @@ public class CrateClickEvents implements Listener {
                         final Map<String, Object> crates = (Map<String, Object>) JsonUtil.getData("AllCrates");
                         final boolean allCrates = crates.containsKey(name);
                         if (allCrates) {
+                            player.getWorld().playSound(player.getLocation(), Sound.valueOf("ENDERDRAGON_WINGS"), 100, 1);
+                            System.out.println(1);
+                            event.setCancelled(true);
+
                             if(!nbt.equals(name)) {
-                                player.getWorld().playSound(player.getLocation(), Sound.valueOf("ENDERDRAGON_WINGS"), 1, 1);
                                 reverseVelocity(player);
                                 return;
                             }
-
                             final CrateSelector crateSelector = new CrateSelector(player, ((Map<String, Object>) crates.get(nbt)), name, event.getItem());
                             crateSelector.startSelector();
 
