@@ -10,7 +10,7 @@
       "Crate_Chest_Number": 6,
       "rewards": {
         "1": {
-          "command": "i {player} dirt 64",
+          "command": "give {player} dirt 54",
           "amount": 64,
           "chance": 60.0,
           "displayName": "Dirt x64",

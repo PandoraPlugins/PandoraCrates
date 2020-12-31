@@ -2,15 +2,15 @@ package me.nanigans.pandoracrates.Crates;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import de.slikey.effectlib.EffectType;
+import de.slikey.effectlib.effect.SphereEffect;
+import de.slikey.effectlib.effect.StarEffect;
 import de.slikey.effectlib.effect.WarpEffect;
 import de.slikey.effectlib.util.DynamicLocation;
 import de.slikey.effectlib.util.ParticleEffect;
 import me.nanigans.pandoracrates.PandoraCrates;
 import me.nanigans.pandoracrates.Utils.ItemUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -44,6 +44,7 @@ public class CrateSelector implements Listener {
     private final List<ArmorStand> armorStands = new ArrayList<>();
     private final Reward reward;
     private int clicksLeft;
+    private ArmorStand[] clickedStands;
 
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
@@ -52,6 +53,7 @@ public class CrateSelector implements Listener {
         this.key = key;
         this.clicksLeft = Integer.parseInt(((Map<String, Object>) crateData.get("key")).get("rewardsPerKey").toString());
         this.reward = new Reward(this);
+        this.clickedStands = new ArmorStand[clicksLeft];
     }
 
     @EventHandler
@@ -64,7 +66,6 @@ public class CrateSelector implements Listener {
             if(rightClicked instanceof ArmorStand){
                 if(rightClicked.getPassenger() == null) {
                     final Map<String, Object> randomRewards = reward.getRandomRewards();
-                    System.out.println("reward = " + randomRewards);
                     ItemStack reward = ItemUtils.createItem(randomRewards.get("material").toString(), null);
                     final Item item = player.getWorld().dropItem(player.getLocation(), reward);
                     item.setPickupDelay(Integer.MAX_VALUE);
@@ -72,6 +73,27 @@ public class CrateSelector implements Listener {
                     item.setCustomName(ChatColor.translateAlternateColorCodes('&', randomRewards.get("displayName").toString()));
                     item.setCustomNameVisible(true);
                     this.reward.getRewardCmds().add(randomRewards.get("command").toString());
+                    rightClicked.setCustomNameVisible(false);
+
+                    player.getWorld().playSound(player.getLocation(), Sound.valueOf("FIREWORK_BLAST"), 10, 1);
+                    StarEffect effect = new StarEffect(PandoraCrates.manager);
+                    effect.asynchronous = true;
+                    effect.type = EffectType.INSTANT;
+                    effect.innerRadius = 0.1F;
+                    effect.spikeHeight = 0.5F;
+                    effect.spikesHalf = 4;
+                    effect.particle = ParticleEffect.FIREWORKS_SPARK;
+                    effect.offset = new Vector(0, 1, 0);
+                    effect.setDynamicOrigin(new DynamicLocation(rightClicked));
+                    effect.start();
+                    this.clicksLeft--;
+                    clickedStands[clicksLeft] = ((ArmorStand) rightClicked);
+                    this.armorStands.remove(rightClicked);
+
+                    if(this.clicksLeft == 0 || this.armorStands.size() == this.clickedStands.length){
+                        endSelector();
+                    }
+                    System.out.println("effect = " + effect.getLocation());
                 }
 
             }
@@ -79,6 +101,52 @@ public class CrateSelector implements Listener {
 
     }
 
+    private void endSelector(){
+
+        for (ArmorStand armorStand : this.armorStands) {
+
+            SphereEffect effect = new SphereEffect(PandoraCrates.manager);
+            effect.particle = ParticleEffect.SMOKE_NORMAL;
+            effect.asynchronous = true;
+            effect.radius = 0.35;
+            effect.type = EffectType.INSTANT;
+            effect.start();
+            effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
+            effect.callback = armorStand::remove;
+
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (ArmorStand clickedStand : CrateSelector.this.clickedStands) {
+                    clickedStand.setGravity(true);
+                    clickedStand.setVelocity(player.getEyeLocation().toVector().subtract(clickedStand.getLocation().toVector()).normalize().divide(new Vector(2, 2, 2)));
+                }
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        HandlerList.unregisterAll(CrateSelector.this);
+                        warp.cancel();
+                        stand.remove();
+                        for (ArmorStand clickedStand : clickedStands) {
+                            clickedStand.remove();
+                            clickedStand.getPassenger().remove();
+                            giveRewards();
+                        }
+                    }
+                }.runTaskLaterAsynchronously(plugin, 10);
+            }
+        }.runTaskLaterAsynchronously(plugin, 20);
+    }
+
+    private void giveRewards(){
+
+        for (String rewardCmd : this.reward.getRewardCmds()) {
+            Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.replaceAll("\\{player}", player.getName()));
+        }
+
+    }
 
     public void startSelector(){
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -182,7 +250,7 @@ public class CrateSelector implements Listener {
 
         ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        Field profileField = null;
+        Field profileField;
         try {
             profileField = skullMeta.getClass().getDeclaredField("profile");
             profileField.setAccessible(true);
