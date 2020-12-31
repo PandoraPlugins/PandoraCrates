@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class KeyTab implements TabCompleter {
             if(sender.hasPermission("Crates.KeyGive")){
 
                 switch (args.length) {
-                    case 2: return (List<String>) ((Map<String, Object>) JsonUtil.getData("AllCrates")).keySet();
+                    case 2: return new ArrayList<>(((Map<String, Object>) JsonUtil.getData("AllCrates")).keySet());
                     case 3: return Collections.singletonList("<amount>");
                 }
 

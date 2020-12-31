@@ -1,15 +1,24 @@
 package me.nanigans.pandoracrates.Crates;
 
+import com.gmail.filoghost.holographicdisplays.HolographicDisplays;
+import com.gmail.filoghost.holographicdisplays.api.Hologram;
+import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import me.nanigans.pandoracrates.PandoraCrates;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.TileEntity;
+import net.minecraft.server.v1_8_R3.TileEntityChest;
+import net.minecraft.server.v1_8_R3.World;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 
 import java.util.Map;
 
 public class Crates {
+    private final static PandoraCrates plugin = PandoraCrates.getPlugin(PandoraCrates.class);
     private final Location loc;
     private final Map<String, Object> crateInfo;
     private final String name;
@@ -25,19 +34,45 @@ public class Crates {
         final Block block = loc.getBlock();
         block.setType(Material.CHEST);
         final Chest chest = ((Chest) block.getState());
-        chest.setCustomName(name);
-        chest.setLock(ChatColor.ALL_CODES);
+        setName(block, this.name);
 
         final int height = Integer.parseInt(crateInfo.get("Hologram_Height").toString());
 
-        ArmorStand stand = loc.getWorld().spawn(loc.clone().add(0, height, 0), ArmorStand.class);
-        stand.setInvulnerable(true);
-        stand.setSmall(true);
-        stand.setCustomName(ChatColor.translateAlternateColorCodes('&', crateInfo.get("Hologram_Name").toString()));
-        stand.setVisible(false);
-        stand.setGravity(false);
-
+        Hologram hologram = HologramsAPI.createHologram(plugin, loc.add(0, height, 0));
+        hologram.appendTextLine(ChatColor.translateAlternateColorCodes('&', crateInfo.get("Hologram_Name").toString()));
         return chest;
 
     }
+
+    private static void setName(Block block, String name)
+    {
+        if (block.getType() != Material.CHEST) {
+            return;
+        }
+
+        net.minecraft.server.v1_8_R3.World nmsWorld = ((CraftWorld) block.getWorld()).getHandle();
+        final BlockPosition blockPosition = new BlockPosition(block.getX(), block.getY(), block.getZ());
+        TileEntity te = nmsWorld.getTileEntity(blockPosition);
+        if (!(te instanceof TileEntityChest))
+        {
+            return;
+        }
+        ((TileEntityChest) te).a(name);
+    }
+
+    public static String getName(Block block){
+        if (block.getType() != Material.CHEST) {
+            return null;
+        }
+
+        net.minecraft.server.v1_8_R3.World nmsWorld = ((CraftWorld) block.getWorld()).getHandle();
+        final BlockPosition blockPosition = new BlockPosition(block.getX(), block.getY(), block.getZ());
+        TileEntity te = nmsWorld.getTileEntity(blockPosition);
+        if (!(te instanceof TileEntityChest))
+        {
+            return null;
+        }
+        return ((TileEntityChest) te).getName();
+    }
+
 }

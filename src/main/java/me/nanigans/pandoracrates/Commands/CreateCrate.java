@@ -25,11 +25,11 @@ public class CreateCrate implements CommandExecutor {
 
                         final Map<String, Object> allCrates = (Map<String, Object>) JsonUtil.getData("AllCrates");
                         if (allCrates != null) {
-                            if (allCrates.keySet().contains(args[1])) {
+                            if (allCrates.containsKey(args[0])) {
 
                                 final Player player = (Player) sender;
                                 final Location loc = player.getLocation();
-                                final Crates crates = new Crates(loc, ((Map<String, Object>) allCrates.get(args[1])), args[1]);
+                                final Crates crates = new Crates(loc, ((Map<String, Object>) allCrates.get(args[0])), args[0]);
                                 crates.createCrate();
                             }else {
                                 sender.sendMessage(ChatColor.RED+"Please specify a valid crate");

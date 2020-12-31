@@ -1,5 +1,6 @@
 package me.nanigans.pandoracrates.Crates;
 
+import me.nanigans.pandoracrates.Utils.Glow;
 import me.nanigans.pandoracrates.Utils.ItemUtils;
 import me.nanigans.pandoracrates.Utils.JsonUtil;
 import me.nanigans.pandoracrates.Utils.NBTData;
@@ -12,6 +13,7 @@ import org.json.simple.JSONArray;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Key {
 
@@ -51,9 +53,14 @@ public class Key {
         final ItemMeta meta = item.getItemMeta();
         meta.setLore(
                 (List<String>) ((JSONArray) JsonUtil.getData("AllCrates." + this.name + ".key.metaData.lore")).stream().map(i ->
-                        ChatColor.translateAlternateColorCodes('&', i.toString()))
+                        ChatColor.translateAlternateColorCodes('&', i.toString())).collect(Collectors.toList())
         );
+        if(Boolean.parseBoolean(keyInfo.get("glow").toString())){
+            final Glow glow = new Glow(70);
+            meta.addEnchant(glow, 1, true);
+        }
         item.setItemMeta(meta);
+
 
         return item;
     }

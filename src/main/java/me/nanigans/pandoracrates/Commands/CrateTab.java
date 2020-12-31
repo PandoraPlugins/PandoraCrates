@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ public class CrateTab implements TabCompleter {
         if(command.getName().equalsIgnoreCase("createcrate")){
 
             if(args.length == 1){
-                return (List<String>) ((Map<String, Object>) JsonUtil.getData("AllCrates")).keySet();
+                return new ArrayList<>(((Map<String, Object>) JsonUtil.getData("AllCrates")).keySet());
             }
 
         }
