@@ -3,7 +3,9 @@
     "openCrate": "You have opened {crate_name} crate",
     "noKeyError": "You do not have a key to open this crate",
     "chestSummon": "Choose {choices_number} chests",
-    "chestClick": "You have selected {item_name}"
+    "chestClick": "You have selected {item_name}",
+    "rewardMsgTitle": "&c====&6Crate Rewards&c====",
+    "rewardMsgFooter": "&c===================="
   },
   "sounds": {
     "clickCrate":{

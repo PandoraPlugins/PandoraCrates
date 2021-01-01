@@ -14,14 +14,17 @@
           "amount": 64,
           "chance": 60.0,
           "displayName": "Dirt x64",
-          "material": "DIRT"
+          "material": "DIRT",
+          "rewardMsg": "- 64 Pieces of Dirt was Rewarded to you"
         },
         "2": {
           "command": "ceggive {player} levitating 25",
           "amount": 25,
           "chance": 40.0,
           "displayName": "Levitating Creeper Egg",
-          "material": "STONE"
+          "material": "STONE",
+          "rewardMsg": "- 64 Pieces of Ceggs was Rewarded to you"
+
         }
       },
       "key": {

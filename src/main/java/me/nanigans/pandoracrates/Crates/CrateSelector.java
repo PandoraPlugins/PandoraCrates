@@ -12,6 +12,7 @@ import de.slikey.effectlib.util.ParticleEffect;
 import me.nanigans.pandoracrates.PandoraCrates;
 import me.nanigans.pandoracrates.Utils.ConfigUtils;
 import me.nanigans.pandoracrates.Utils.ItemUtils;
+import me.nanigans.pandoracrates.Utils.JsonUtil;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -156,10 +157,15 @@ public class CrateSelector implements Listener {
             @Override
             public void run() {
                 if(player.isOnGround()) {
+                    this.cancel();
+
+                    ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
                     for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
                         Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
-                        this.cancel();
+                        final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
+                        player.sendMessage(rewardMsg);
                     }
+                    ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
                 }
             }
         }.runTaskTimerAsynchronously(plugin, 10, 10);
