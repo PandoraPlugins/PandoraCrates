@@ -10,6 +10,7 @@ import de.slikey.effectlib.effect.WarpEffect;
 import de.slikey.effectlib.util.DynamicLocation;
 import de.slikey.effectlib.util.ParticleEffect;
 import me.nanigans.pandoracrates.PandoraCrates;
+import me.nanigans.pandoracrates.Utils.ConfigUtils;
 import me.nanigans.pandoracrates.Utils.ItemUtils;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
@@ -60,8 +61,7 @@ public class CrateSelector implements Listener {
 
     @EventHandler
     public void armorStandClick(PlayerInteractAtEntityEvent event){
-        System.out.println("event.getClickedPosition() = " + event.getClickedPosition());
-        System.out.println("event.getRightClicked() = " + event.getRightClicked());
+
         if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
             event.setCancelled(true);
             final Entity rightClicked = event.getRightClicked();
@@ -77,7 +77,8 @@ public class CrateSelector implements Listener {
                     this.reward.getRewardCmds().add(randomRewards);
                     rightClicked.setCustomNameVisible(false);
 
-                    player.getWorld().playSound(player.getLocation(), Sound.valueOf("FIREWORK_BLAST"), 10, 1);
+                    ConfigUtils.sendMessage("messages.chestClick", player, "\\{item_name}:"+randomRewards.get("displayName"));
+                    ConfigUtils.playSound("sounds.rewardShow", player);
                     StarEffect effect = new StarEffect(PandoraCrates.manager);
                     effect.asynchronous = true;
                     effect.type = EffectType.INSTANT;
@@ -93,9 +94,13 @@ public class CrateSelector implements Listener {
                     this.armorStands.remove(rightClicked);
 
                     if(this.clicksLeft == 0 || this.armorStands.size() == this.clickedStands.length){
-                        endSelector();
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                endSelector();
+                            }
+                        }.runTaskLaterAsynchronously(plugin, 15);
                     }
-                    System.out.println("effect = " + effect.getLocation());
                 }
 
             }
@@ -116,11 +121,11 @@ public class CrateSelector implements Listener {
             effect.start();
             effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
             effect.callback = armorStand::remove;
-            armorStand.getWorld().playSound(armorStand.getEyeLocation(), Sound.valueOf("EXPLODE"), 5, 1);
-
+            ConfigUtils.playSound("sounds.chestBoom", player);
         }
         chestWarps.forEach(Effect::cancel);
         sphere.cancel();
+        HandlerList.unregisterAll(this);
 
         new BukkitRunnable() {
             @Override
@@ -132,7 +137,6 @@ public class CrateSelector implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        HandlerList.unregisterAll(CrateSelector.this);
                         warp.cancel();
                         stand.remove();
                         for (ArmorStand clickedStand : clickedStands) {
@@ -140,6 +144,7 @@ public class CrateSelector implements Listener {
                             clickedStand.getPassenger().remove();
                         }
                         giveRewards();
+                        ConfigUtils.playSound("sounds.rewardGiven", player);
                     }
                 }.runTaskLaterAsynchronously(plugin, 10);
             }
@@ -153,12 +158,11 @@ public class CrateSelector implements Listener {
                 if(player.isOnGround()) {
                     for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
                         Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                        this.cancel();
                     }
-                }else{
-                    giveRewards();
                 }
             }
-        }.runTaskLaterAsynchronously(plugin, 10);
+        }.runTaskTimerAsynchronously(plugin, 10, 10);
     }
 
     public void startSelector(){
@@ -234,6 +238,8 @@ public class CrateSelector implements Listener {
                             warpE.start();
                             chestWarps.add(warpE);
                         }
+                        ConfigUtils.sendMessage("messages.chestSummon", player, "\\{choices_number}:"+CrateSelector.this.clicksLeft);
+                        ConfigUtils.playSound("sounds.chestSummon", player);
                     }
                 }.runTaskLaterAsynchronously(plugin, 10);
 

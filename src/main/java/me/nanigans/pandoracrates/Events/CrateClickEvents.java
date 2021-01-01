@@ -5,7 +5,8 @@ import me.nanigans.pandoracrates.Crates.Crates;
 import me.nanigans.pandoracrates.Crates.Key;
 import me.nanigans.pandoracrates.Utils.JsonUtil;
 import me.nanigans.pandoracrates.Utils.NBTData;
-import org.bukkit.Sound;
+import me.nanigans.pandoracrates.Utils.ConfigUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,27 +26,39 @@ public class CrateClickEvents implements Listener {
             final Player player = event.getPlayer();
             if (event.getClickedBlock().getState() instanceof Chest) {
 
-                final ItemStack item = event.getItem();
-                    if(item != null && NBTData.containsNBT(item, Key.crateEnum)){
-                        final String nbt = NBTData.getNBT(item, Key.crateEnum);
+                final String name = Crates.getName(event.getClickedBlock());
+                final Map<String, Object> crates = (Map<String, Object>) JsonUtil.getData("AllCrates");
 
-                        final String name = Crates.getName(event.getClickedBlock());
-                        final Map<String, Object> crates = (Map<String, Object>) JsonUtil.getData("AllCrates");
-                        final boolean allCrates = crates.containsKey(name);
-                        if (allCrates) {
-                            player.getWorld().playSound(player.getLocation(), Sound.valueOf("ENDERDRAGON_WINGS"), 100, 1);
+                if(crates != null && name != null) {
+                    final boolean allCrates = crates.containsKey(name);
+
+                    final ItemStack item = event.getItem();
+                    if (allCrates) {
+                        if (item != null && NBTData.containsNBT(item, Key.crateEnum)) {
+                        final String nbt = NBTData.getNBT(item, Key.crateEnum);
+                            ConfigUtils.playSound("sounds.clickCrate", player);
                             event.setCancelled(true);
 
                             assert nbt != null;
-                            if(!nbt.equals(name)) {
+                            if (!nbt.equals(name)) {
                                 reverseVelocity(player);
                                 return;
                             }
+                            final Map<String, Object> crate = (Map<String, Object>) crates.get(nbt);
 
-                            final CrateSelector crateSelector = new CrateSelector(player, ((Map<String, Object>) crates.get(nbt)), name, event.getItem());
+                            ConfigUtils.sendMessage("messages.openCrate", player,
+                                    "\\{crate_name}:"+ChatColor.stripColor(
+                                            ChatColor.translateAlternateColorCodes('&', crate.get("Hologram_Name").toString())));
+                            final CrateSelector crateSelector = new CrateSelector(player, crate, name, event.getItem());
                             crateSelector.startSelector();
 
+                        }else{
+                            reverseVelocity(player);
+                            ConfigUtils.playSound("sounds.clickCrate", player);
+                            ConfigUtils.sendMessage("messages.noKeyError", player);
+                            event.setCancelled(true);
                         }
+                    }
                 }
 
             }
@@ -59,7 +72,7 @@ public class CrateClickEvents implements Listener {
 
         final Object data = JsonUtil.getData("AllCrates.invalidCrateBounceVelocity");
         if(data != null)
-        player.setVelocity(player.getVelocity().multiply(-1).multiply(
+        player.setVelocity(player.getLocation().getDirection().multiply(-1).multiply(
                 Double.parseDouble(data.toString())));
 
     }

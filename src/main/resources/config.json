@@ -6,6 +6,35 @@
     "chestClick": "You have selected {item_name}"
   },
   "sounds": {
-
+    "clickCrate":{
+      "name": "ENDERDRAGON_WINGS",
+      "volume": 100.0,
+      "pitch": 1.0,
+      "forPlayer": false
+    },
+    "chestSummon": {
+      "name": "IRONGOLEM_HIT",
+      "volume": 50.0,
+      "pitch": 1.0,
+      "forPlayer": false
+    },
+    "rewardShow": {
+      "name": "FIREWORK_BLAST",
+      "volume": 10.0,
+      "pitch": 1.0,
+      "forPlayer": false
+    },
+    "chestBoom": {
+      "name": "EXPLODE",
+      "volume": 5.0,
+      "pitch": 1.0,
+      "forPlayer": false
+    },
+    "rewardGiven": {
+      "name": "LEVEL_UP",
+      "volume": 10.0,
+      "pitch": 1.0,
+      "forPlayer": true
+    }
   }
 }
