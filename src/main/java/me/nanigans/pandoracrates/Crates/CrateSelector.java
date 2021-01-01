@@ -39,7 +39,7 @@ public class CrateSelector implements Listener {
     private final Player player;
     private final Map<String, Object> data;
     private final String name;
-    private final ItemStack key;
+    private ItemStack key;
     private WarpEffect warp;
     private SphereEffect sphere;
     private ArmorStand stand;
@@ -49,6 +49,7 @@ public class CrateSelector implements Listener {
     private int clicksLeft;
     private ArmorStand[] clickedStands;
     private List<WarpEffect> chestWarps = new ArrayList<>();
+    private Key keyObj;
 
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
@@ -58,6 +59,7 @@ public class CrateSelector implements Listener {
         this.clicksLeft = Integer.parseInt(((Map<String, Object>) crateData.get("key")).get("rewardsPerKey").toString());
         this.reward = new Reward(this);
         this.clickedStands = new ArmorStand[clicksLeft];
+        this.keyObj = new Key(key);
     }
 
     @EventHandler
@@ -174,6 +176,11 @@ public class CrateSelector implements Listener {
     public void startSelector(){
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         player.setVelocity(new Vector(0, 1.5, 0));
+        this.keyObj.removeUse();
+        int indx = player.getInventory().first(this.key);
+        player.getInventory().setItem(indx, this.keyObj.getKey());
+        if(this.keyObj.getUses() <= 0)
+            player.getInventory().setItem(indx, null);
 
         new BukkitRunnable() {
             @Override
@@ -273,17 +280,7 @@ public class CrateSelector implements Listener {
 
         if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
 
-            stand.remove();
-            warp.cancel();
-            sphere.cancel();
-            chestWarps.forEach(Effect::cancel);
-            this.armorStands.forEach(i -> {
-                if(i.getPassenger() != null){
-                    i.getPassenger().remove();
-                }
-                i.remove();
-            });
-            HandlerList.unregisterAll(this);
+            event.setCancelled(true);
 
         }
 

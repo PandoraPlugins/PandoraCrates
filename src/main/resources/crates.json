@@ -35,7 +35,7 @@
         "invalidCrateMsg": "&cThis key can only be used on epic crates",
         "metaData": {
           "displayName": "Epic Crate Key",
-          "lore": ["This key has {uses} uses left", "Each key gives you 2 rewards", "This key can be used with the epic crates"]
+          "lore": ["This key has {uses}/3 uses left", "Each key gives you 2 rewards", "This key can be used with the epic crates"]
         }
       }
     }
