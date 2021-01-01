@@ -1,0 +1,11 @@
+{
+  "messages": {
+    "openCrate": "You have opened {crate_name} crate",
+    "noKeyError": "You do not have a key to open this crate",
+    "chestSummon": "Choose {choices_number} chests",
+    "chestClick": "You have selected {item_name}"
+  },
+  "sounds": {
+
+  }
+}

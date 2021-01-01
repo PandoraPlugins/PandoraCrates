@@ -3,7 +3,6 @@
   "_comment1": "Chance is the chance to get an item out of 100. Try to keep the entire crate out of 100",
   "AllCrates": {
     "invalidCrateBounceVelocity": 2.0,
-    "rewardMessage": "===Rewards===\n{displayNames} x{amount}\n============",
     "Epic_Crate": {
       "Hologram_Name": "&cEpic Crate",
       "Hologram_Height": 1,

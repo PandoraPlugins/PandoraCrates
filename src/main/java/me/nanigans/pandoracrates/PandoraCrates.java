@@ -45,7 +45,15 @@ public final class PandoraCrates extends JavaPlugin {
         getCommand("createcrate").setTabCompleter(new CrateTab());
         getCommand("keygive").setTabCompleter(new KeyTab());
         getServer().getPluginManager().registerEvents(new CrateClickEvents(), this);
-        File configFile = new File(getDataFolder(), "crates.json");
+        File crateFile = new File(getDataFolder(), "crates.json");
+        File configFile = new File(getDataFolder(), "config.json");
+        checkFileExists(crateFile);
+        checkFileExists(configFile);
+
+        registerGlow();
+    }
+
+    private void checkFileExists(File configFile){
 
         if(!configFile.exists()) {
 
@@ -61,7 +69,6 @@ public final class PandoraCrates extends JavaPlugin {
 
         }
 
-        registerGlow();
     }
 
     private void registerGlow() {

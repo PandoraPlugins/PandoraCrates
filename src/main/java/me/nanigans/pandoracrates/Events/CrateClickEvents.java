@@ -34,13 +34,14 @@ public class CrateClickEvents implements Listener {
                         final boolean allCrates = crates.containsKey(name);
                         if (allCrates) {
                             player.getWorld().playSound(player.getLocation(), Sound.valueOf("ENDERDRAGON_WINGS"), 100, 1);
-                            System.out.println(1);
                             event.setCancelled(true);
 
+                            assert nbt != null;
                             if(!nbt.equals(name)) {
                                 reverseVelocity(player);
                                 return;
                             }
+
                             final CrateSelector crateSelector = new CrateSelector(player, ((Map<String, Object>) crates.get(nbt)), name, event.getItem());
                             crateSelector.startSelector();
 

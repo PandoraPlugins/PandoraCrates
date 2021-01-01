@@ -196,10 +196,10 @@ public class CrateSelector implements Listener {
 
                 final int amount = Integer.parseInt(data.get("Crate_Chest_Number").toString());
                 final List<Location> locations = circleParts(location.add(0, 2, 0), 2, amount);
-                Vector pVec = player.getLocation().toVector();
+                final Vector pVec = player.getLocation().toVector();
 
-                ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
-                Location pLoc = player.getEyeLocation();
+                final ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
+                final Location pLoc = player.getEyeLocation();
                 pLoc.add(0, 3, 0);
                 for (final Location loc : locations) {
                     ArmorStand stand = loc.getWorld().spawn(pLoc, ArmorStand.class);
@@ -263,6 +263,8 @@ public class CrateSelector implements Listener {
 
             stand.remove();
             warp.cancel();
+            sphere.cancel();
+            chestWarps.forEach(Effect::cancel);
             this.armorStands.forEach(i -> {
                 if(i.getPassenger() != null){
                     i.getPassenger().remove();
