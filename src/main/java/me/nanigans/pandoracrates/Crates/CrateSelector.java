@@ -47,9 +47,9 @@ public class CrateSelector implements Listener {
     private final List<ArmorStand> armorStands = new ArrayList<>();
     private final Reward reward;
     private int clicksLeft;
-    private ArmorStand[] clickedStands;
-    private List<WarpEffect> chestWarps = new ArrayList<>();
-    private Key keyObj;
+    private final ArmorStand[] clickedStands;
+    private final List<WarpEffect> chestWarps = new ArrayList<>();
+    private final Key keyObj;
 
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
@@ -120,6 +120,7 @@ public class CrateSelector implements Listener {
             effect.asynchronous = true;
             effect.radius = 0.35;
             effect.particles = 40;
+            effect.particleCount = 5;
             effect.type = EffectType.INSTANT;
             effect.start();
             effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
@@ -280,11 +281,44 @@ public class CrateSelector implements Listener {
 
         if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
 
-            event.setCancelled(true);
+            stand.remove();
+            warp.cancel();
+            sphere.cancel();
+            chestWarps.forEach(Effect::cancel);
+            this.armorStands.forEach(i -> {
+                if(i.getPassenger() != null){
+                    i.getPassenger().remove();
+                }
+                i.remove();
+            });
+            HandlerList.unregisterAll(this);
 
         }
 
     }
+
+    /* Prevent player from dismounting
+    getProtocolManager().addPacketListener(new PacketAdapter(RCadeAPI.getRCade(), PacketType.Play.Client.STEER_VEHICLE) {
+    @Override
+    public void onPacketReceiving (com.comphenix.protocol.events.PacketEvent e) {
+        if(e.getPacketType() == PacketType.Play.Client.STEER_VEHICLE) {
+            if(e.getPacket().getHandle() instanceof PacketPlayInSteerVehicle) {
+                Field f = null;
+                try {
+                    f = PacketPlayInSteerVehicle.class.getDeclaredField("d");
+                    f.setAccessible(true);
+                    f.set(e.getPacket().getHandle(), false);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onPacketSending (com.comphenix.protocol.events.PacketEvent e) {}
+});
+     */
 
 
 
