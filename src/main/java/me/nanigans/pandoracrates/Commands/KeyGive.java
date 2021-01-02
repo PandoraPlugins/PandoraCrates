@@ -2,6 +2,7 @@ package me.nanigans.pandoracrates.Commands;
 
 import me.nanigans.pandoracrates.Crates.Key;
 import me.nanigans.pandoracrates.Utils.JsonUtil;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -32,6 +33,9 @@ public class KeyGive implements CommandExecutor {
 
                                 final Key key = new Key(((Map<String, Object>) allCrates.get(args[1])), args[1]);
                                 final ItemStack key1 = key.createKey();
+                                if(args.length > 2 && NumberUtils.isNumber(args[2])){
+                                    key1.setAmount(Integer.parseInt(args[2]));
+                                }
                                 if (!player.getInventory().addItem(key1).isEmpty()) {
                                     player.getWorld().dropItem(player.getLocation(), key1);
                                 }

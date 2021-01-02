@@ -271,10 +271,29 @@ public class CrateSelector implements Listener {
         }
     }
 
+    private void throwPlayerToLocation(){
+//loc.subtract(ent.getLocation()).toVector(
+        Map<String, Object> location = (Map<String, Object>) this.data.get("openCrateLocation");
+        final Vector vector = new Vector(Integer.parseInt(location.get("x").toString()), Integer.parseInt(location.get("y").toString()), Integer.parseInt(location.get("z").toString()));
+        Vector loc = vector.subtract(player.getLocation().toVector());
+        player.setVelocity(loc.normalize().multiply(1.5));
+
+    }
+
+    private Location getOpenLoc(){
+
+        Map<String, Object> location = (Map<String, Object>) this.data.get("openCrateLocation");
+        final Location loc = new Location(player.getWorld(), Double.parseDouble(location.get("x").toString()), Double.parseDouble(location.get("y").toString()), Double.parseDouble(location.get("z").toString()));
+        return loc;
+    }
 
     public void startSelector() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        player.setVelocity(new Vector(0, 1.5, 0));
+        final boolean openCrateLocation = this.data.get("openCrateLocation") != null;
+        if(openCrateLocation){
+            throwPlayerToLocation();
+        }else player.setVelocity(new Vector(0, 1.5, 0));
+
         this.keyObj.removeUse();
         int indx = player.getInventory().first(this.key);
         player.getInventory().setItem(indx, this.keyObj.getKey());
@@ -286,6 +305,12 @@ public class CrateSelector implements Listener {
             @Override
             public void run() {
                 if (player.isOnline()) {
+                    if(openCrateLocation) {
+                        final Location openLoc = getOpenLoc();
+                        openLoc.setYaw(player.getLocation().getYaw());
+                        openLoc.setPitch(player.getLocation().getPitch());
+                        player.teleport(openLoc);
+                    }
                     warp = new WarpEffect(PandoraCrates.manager);
                     warp.asynchronous = true;
                     warp.particle = ParticleEffect.SPELL;
@@ -306,25 +331,27 @@ public class CrateSelector implements Listener {
                     sphere.infinite();
                     sphere.start();
 
-                    final Location location = player.getLocation();
+                    final Location location = openCrateLocation ? getOpenLoc() : player.getLocation();
                     stand = player.getWorld().spawn(location, ArmorStand.class);
                     stand.setGravity(false);
                     stand.setVisible(false);
                     stand.setPassenger(player);
 
                     final int amount = Integer.parseInt(data.get("Crate_Chest_Number").toString());
+                    final Vector pVec = location.toVector();
                     final List<Location> locations = circleParts(location.add(0, 2, 0), 2, amount);
-                    final Vector pVec = player.getLocation().toVector();
 
                     final ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
-                    final Location pLoc = player.getEyeLocation();
-                    pLoc.add(0, 3, 0);
+                    final Location pLoc = location.clone();
+                    pLoc.add(0, 2.5, 0);
+                    final String armorName = ChatColor.translateAlternateColorCodes('&', data.get("Chest_Name").toString());
+
                     for (final Location loc : locations) {
                         ArmorStand stand = loc.getWorld().spawn(pLoc, ArmorStand.class);
                         stand.setHelmet(item);
                         stand.setVisible(false);
                         stand.setSmall(true);
-                        stand.setCustomName("Click Me!");
+                        stand.setCustomName(armorName);
                         stand.setCustomNameVisible(true);
                         final Vector vector = loc.toVector().subtract(new Vector(0, 2, 0));
                         final Vector facing = pVec.clone().subtract(vector).normalize();
