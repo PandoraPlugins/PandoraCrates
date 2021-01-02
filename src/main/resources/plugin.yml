@@ -10,11 +10,17 @@ commands:
     description: Gives the player a key
   createcrate:
     usage: /createcrate <crate name>
-    description: Crates a new crate where you stand
+    description: Creates a new crate where you stand
+  lootbaggive:
+    usage: /lootbaggive <player> <bat name>
+    description: Gives a new lootbag to the player
 permissions:
   Crates.KeyGive:
     description: Allows the user to give out new keys
     default: op
   Crates.CreateCrate:
     description: Allows the user to create a new crate
+    default: op
+  LootBag.Give:
+    description: Allows the user to create a new loot bag
     default: op

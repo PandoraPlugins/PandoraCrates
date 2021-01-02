@@ -1,0 +1,23 @@
+{
+  "AllBags": {
+    "Epic_Bag": {
+      "material": "WOOL",
+      "displayName": "Epic Loot Bag",
+      "maxItems": 500,
+      "rewards": {
+        "1": {
+          "command": "give {player} dirt {amount}",
+          "chance": 70.0
+        },
+        "2": {
+          "command": "give {player} stone {amount}",
+          "chance": 30.0
+        }
+
+      }
+
+    }
+
+  }
+
+}

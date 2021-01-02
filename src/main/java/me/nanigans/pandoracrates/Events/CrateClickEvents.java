@@ -4,6 +4,7 @@ import me.nanigans.pandoracrates.Crates.CrateFinish;
 import me.nanigans.pandoracrates.Crates.CrateSelector;
 import me.nanigans.pandoracrates.Crates.Crates;
 import me.nanigans.pandoracrates.Crates.Key;
+import me.nanigans.pandoracrates.LootBags.LootBag;
 import me.nanigans.pandoracrates.Utils.JsonUtil;
 import me.nanigans.pandoracrates.Utils.NBTData;
 import me.nanigans.pandoracrates.Utils.ConfigUtils;
@@ -21,6 +22,26 @@ import java.util.Timer;
 import java.util.UUID;
 
 public class CrateClickEvents implements Listener {
+
+    @EventHandler
+    public void onLootBagClick(PlayerInteractEvent event){
+
+        if(event.getAction().toString().toLowerCase().contains("right")){
+
+            final Player player = event.getPlayer();
+            if(event.getItem() != null){
+                final ItemStack item = event.getItem();
+                if(NBTData.containsNBT(item, LootBag.LOOTBAG)){
+
+                    final String nbt = NBTData.getNBT(item, LootBag.LOOTBAG);
+
+
+                }
+            }
+
+        }
+
+    }
 
     @EventHandler
     public void onCrateHit(PlayerInteractEvent event){

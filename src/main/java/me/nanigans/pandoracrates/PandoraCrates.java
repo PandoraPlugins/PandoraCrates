@@ -52,8 +52,11 @@ public final class PandoraCrates extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CrateClickEvents(), this);
         File crateFile = new File(getDataFolder(), "crates.json");
         File configFile = new File(getDataFolder(), "config.json");
+        File lootPath = new File(getDataFolder(), "lootbags.json");
+
         checkFileExists(crateFile);
         checkFileExists(configFile);
+        checkFileExists(lootPath);
 
         registerGlow();
     }
