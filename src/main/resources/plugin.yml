@@ -14,6 +14,7 @@ commands:
   lootbaggive:
     usage: /lootbaggive <player> <bat name>
     description: Gives a new lootbag to the player
+    aliases: [lootbag, lootgive, baggive, lbg]
 permissions:
   Crates.KeyGive:
     description: Allows the user to give out new keys

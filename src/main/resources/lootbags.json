@@ -1,17 +1,24 @@
 {
+  "_comment": "amountAmp is the the the amount the bag should give in comparision to other rewards",
   "AllBags": {
     "Epic_Bag": {
       "material": "WOOL",
       "displayName": "Epic Loot Bag",
-      "maxItems": 500,
+      "glow": true,
+      "lore": [
+        "Click Me for epic loots"
+      ],
+      "maxItems": 32,
       "rewards": {
         "1": {
           "command": "give {player} dirt {amount}",
-          "chance": 70.0
+          "amountAmp": 2,
+          "rewardMsg": "- {amount} Dirt given"
         },
         "2": {
           "command": "give {player} stone {amount}",
-          "chance": 30.0
+          "amountAmp": 3,
+          "rewardMsg": "- {amount} Stone given"
         }
 
       }

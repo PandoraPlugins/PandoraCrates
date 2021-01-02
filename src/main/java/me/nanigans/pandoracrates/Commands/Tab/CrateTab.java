@@ -1,4 +1,4 @@
-package me.nanigans.pandoracrates.Commands;
+package me.nanigans.pandoracrates.Commands.Tab;
 
 import me.nanigans.pandoracrates.Utils.JsonUtil;
 import org.bukkit.command.Command;
