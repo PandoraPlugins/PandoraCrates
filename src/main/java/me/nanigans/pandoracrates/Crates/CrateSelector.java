@@ -272,7 +272,6 @@ public class CrateSelector implements Listener {
     }
 
     private void throwPlayerToLocation(){
-//loc.subtract(ent.getLocation()).toVector(
         Map<String, Object> location = (Map<String, Object>) this.data.get("openCrateLocation");
         final Vector vector = new Vector(Integer.parseInt(location.get("x").toString()), Integer.parseInt(location.get("y").toString()), Integer.parseInt(location.get("z").toString()));
         Vector loc = vector.subtract(player.getLocation().toVector());
