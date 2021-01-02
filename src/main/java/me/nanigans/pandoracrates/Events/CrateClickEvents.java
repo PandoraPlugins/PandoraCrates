@@ -24,7 +24,7 @@ public class CrateClickEvents implements Listener {
         if(event.getAction().toString().toLowerCase().contains("right")){
 
             final Player player = event.getPlayer();
-            if (event.getClickedBlock().getState() instanceof Chest) {
+            if (event.getClickedBlock() != null && event.getClickedBlock().getState() instanceof Chest) {
 
                 final String name = Crates.getName(event.getClickedBlock());
                 final Map<String, Object> crates = (Map<String, Object>) JsonUtil.getData("AllCrates");

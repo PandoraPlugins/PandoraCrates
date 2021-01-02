@@ -12,6 +12,7 @@ import org.json.simple.JSONArray;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Key {
@@ -49,14 +50,15 @@ public class Key {
     public void addUse(){
 
         if (NBTData.containsNBT(key, "USES")) {
-            this.uses++;
+            this.uses+=1;
             key = NBTData.setNBT(key, "USES~"+uses);
 
             final ItemMeta itemMeta = key.getItemMeta();
             itemMeta.setLore(
                     (List<String>) ((JSONArray) JsonUtil.getData("AllCrates." + this.name + ".key.metaData.lore")).stream().map(i ->
-                            ChatColor.translateAlternateColorCodes('&', i.toString().replaceAll("\\{uses}", String.valueOf(uses)))).collect(Collectors.toList())
+                            ChatColor.translateAlternateColorCodes('&', i.toString().replaceAll("\\{uses}", String.valueOf(this.uses)))).collect(Collectors.toList())
             );
+            this.key.setItemMeta(itemMeta);
         }
 
     }
@@ -66,8 +68,6 @@ public class Key {
         if (NBTData.containsNBT(key, "USES")) {
             this.uses-=1;
             key = NBTData.setNBT(key, "USES~"+uses);
-            System.out.println("NBTData.getAllNBT(key) = " + NBTData.getAllNBT(key));
-            System.out.println("NBTData.getNBT(key, \"USES\") = " + NBTData.getNBT(key, "USES"));
 
             final ItemMeta itemMeta = key.getItemMeta();
             itemMeta.setLore(
@@ -83,10 +83,9 @@ public class Key {
 
         final String material = keyInfo.get("material").toString();
         final Map<String, Object> keyMeta = ((Map<String, Object>) keyInfo.get("metaData"));
-        final ItemStack item = ItemUtils.createItem(material, keyMeta.get("displayName").toString(), crateEnum+"~"+name, "USES~"+keyInfo.get("uses"));
+        final ItemStack item = ItemUtils.createItem(material, keyMeta.get("displayName").toString(), crateEnum+"~"+name, "USES~"+keyInfo.get("uses"), "UUID~"+UUID.randomUUID());
 
         final ItemMeta meta = item.getItemMeta();
-        System.out.println("keyMeta = " + keyMeta);
         meta.setLore(
                 (List<String>) ((JSONArray) JsonUtil.getData("AllCrates." + this.name + ".key.metaData.lore")).stream().map(i ->
                         ChatColor.translateAlternateColorCodes('&', i.toString().replaceAll("\\{uses}", keyInfo.get("uses").toString()))).collect(Collectors.toList())
@@ -99,6 +98,10 @@ public class Key {
 
 
         return item;
+    }
+
+    public void setKey(ItemStack key) {
+        this.key = key;
     }
 
     public void setUses(int uses) {

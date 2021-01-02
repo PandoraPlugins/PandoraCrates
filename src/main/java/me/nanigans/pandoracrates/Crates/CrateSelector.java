@@ -12,7 +12,6 @@ import de.slikey.effectlib.util.ParticleEffect;
 import me.nanigans.pandoracrates.PandoraCrates;
 import me.nanigans.pandoracrates.Utils.ConfigUtils;
 import me.nanigans.pandoracrates.Utils.ItemUtils;
-import me.nanigans.pandoracrates.Utils.JsonUtil;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -21,8 +20,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -60,6 +63,48 @@ public class CrateSelector implements Listener {
         this.reward = new Reward(this);
         this.clickedStands = new ArmorStand[clicksLeft];
         this.keyObj = new Key(key);
+        PandoraCrates.pj.addPlayer(player);
+    }
+
+    @EventHandler
+    public void leave(PlayerQuitEvent event){
+
+        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+            keyObj.addUse();
+            int indx = player.getInventory().first(this.key);
+            if(indx == -1){
+                this.key = keyObj.getKey();
+                player.getInventory().addItem(this.key);
+            }else player.getInventory().setItem(indx, this.keyObj.getKey());
+            killAll();
+        }
+    }
+
+    @EventHandler
+    public void commandSend(PlayerCommandPreprocessEvent event){
+
+        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.RED+"You cannot use any commands while using a crate");
+        }
+
+    }
+
+    @EventHandler
+    public void dropItem(PlayerDropItemEvent event){
+        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void dropItemInv(InventoryClickEvent event){
+        if(event.getWhoClicked().getUniqueId().equals(this.player.getUniqueId())) {
+            if (event.getClick().toString().toLowerCase().contains("drop")) {
+                event.setCancelled(true);
+            }
+        }
+
     }
 
     @EventHandler
@@ -111,68 +156,103 @@ public class CrateSelector implements Listener {
 
     }
 
-    private void endSelector(){
-
-        for (ArmorStand armorStand : this.armorStands) {
-
-            SphereEffect effect = new SphereEffect(PandoraCrates.manager);
-            effect.particle = ParticleEffect.SMOKE_NORMAL;
-            effect.asynchronous = true;
-            effect.radius = 0.35;
-            effect.particles = 40;
-            effect.particleCount = 5;
-            effect.type = EffectType.INSTANT;
-            effect.start();
-            effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
-            effect.callback = armorStand::remove;
-            ConfigUtils.playSound("sounds.chestBoom", player);
-        }
-        chestWarps.forEach(Effect::cancel);
+    private void killAll(){
         sphere.cancel();
+        warp.cancel();
+        player.eject();
         HandlerList.unregisterAll(this);
+        chestWarps.forEach(Effect::cancel);
+        stand.remove();
+        PandoraCrates.pj.removePlayer(player);
+        this.armorStands.forEach(Entity::remove);
+        for (ArmorStand clickedStand : clickedStands) {
+            if(clickedStand != null) {
+                clickedStand.remove();
+                clickedStand.getPassenger().remove();
+            }
+        }
+    }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (ArmorStand clickedStand : CrateSelector.this.clickedStands) {
-                    clickedStand.setGravity(true);
-                    clickedStand.setVelocity(player.getEyeLocation().toVector().subtract(clickedStand.getLocation().toVector()).normalize().divide(new Vector(2, 2, 2)));
+    private void endSelector(){
+        if(player.isOnline()) {
+
+            for (ArmorStand armorStand : this.armorStands) {
+
+                SphereEffect effect = new SphereEffect(PandoraCrates.manager);
+                effect.particle = ParticleEffect.SMOKE_NORMAL;
+                effect.asynchronous = true;
+                effect.radius = 0.35;
+                effect.particles = 40;
+                effect.particleCount = 5;
+                effect.type = EffectType.INSTANT;
+                effect.start();
+                effect.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
+                effect.callback = armorStand::remove;
+                ConfigUtils.playSound("sounds.chestBoom", player);
+            }
+            chestWarps.forEach(Effect::cancel);
+            sphere.cancel();
+            HandlerList.unregisterAll(this);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isOnline())
+                        for (ArmorStand clickedStand : CrateSelector.this.clickedStands) {
+                            clickedStand.setGravity(true);
+                            clickedStand.setVelocity(player.getEyeLocation().toVector().subtract(clickedStand.getLocation().toVector()).normalize().divide(new Vector(2, 2, 2)));
+                        }
+
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            warp.cancel();
+                            stand.remove();
+                            PandoraCrates.pj.removePlayer(player);
+                            if (player.isOnline())
+                                player.eject();
+
+                            for (ArmorStand clickedStand : clickedStands) {
+                                if (clickedStand != null) {
+                                    clickedStand.remove();
+                                    clickedStand.getPassenger().remove();
+                                }
+                            }
+                            giveRewards();
+                            ConfigUtils.playSound("sounds.rewardGiven", player);
+                        }
+                    }.runTaskLaterAsynchronously(plugin, 10);
                 }
+            }.runTaskLaterAsynchronously(plugin, 10);
+
+        }else killAll();
+    }
+
+    private void giveRewards() {
+            if (player.isOnline()) {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        warp.cancel();
-                        stand.remove();
-                        for (ArmorStand clickedStand : clickedStands) {
-                            clickedStand.remove();
-                            clickedStand.getPassenger().remove();
+                        if (player.isOnGround()) {
+                            this.cancel();
+
+                            ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
+                            for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                                Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                                final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
+                                player.sendMessage(rewardMsg);
+                            }
+                            ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
                         }
-                        giveRewards();
-                        ConfigUtils.playSound("sounds.rewardGiven", player);
                     }
-                }.runTaskLaterAsynchronously(plugin, 10);
-            }
-        }.runTaskLaterAsynchronously(plugin, 20);
-    }
-
-    private void giveRewards(){
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if(player.isOnGround()) {
-                    this.cancel();
-
-                    ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
-                    for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
-                        Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
-                        final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
-                        player.sendMessage(rewardMsg);
-                    }
-                    ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
+                }.runTaskTimerAsynchronously(plugin, 10, 10);
+            } else {
+                for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, 10, 10);
-    }
+        }
+
 
     public void startSelector(){
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -182,6 +262,7 @@ public class CrateSelector implements Listener {
         player.getInventory().setItem(indx, this.keyObj.getKey());
         if(this.keyObj.getUses() <= 0)
             player.getInventory().setItem(indx, null);
+        this.key = this.keyObj.getKey();
 
         new BukkitRunnable() {
             @Override
@@ -276,26 +357,26 @@ public class CrateSelector implements Listener {
 
     }
 
-    @EventHandler
-    public void sneakEvent(PlayerToggleSneakEvent event){
-
-        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
-
-            stand.remove();
-            warp.cancel();
-            sphere.cancel();
-            chestWarps.forEach(Effect::cancel);
-            this.armorStands.forEach(i -> {
-                if(i.getPassenger() != null){
-                    i.getPassenger().remove();
-                }
-                i.remove();
-            });
-            HandlerList.unregisterAll(this);
-
-        }
-
-    }
+//    @EventHandler
+//    public void sneakEvent(PlayerToggleSneakEvent event){
+//
+//        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+//
+//            stand.remove();
+//            warp.cancel();
+//            sphere.cancel();
+//            chestWarps.forEach(Effect::cancel);
+//            this.armorStands.forEach(i -> {
+//                if(i.getPassenger() != null){
+//                    i.getPassenger().remove();
+//                }
+//                i.remove();
+//            });
+//            HandlerList.unregisterAll(this);
+//
+//        }
+//
+//    }
 
     /* Prevent player from dismounting
     getProtocolManager().addPacketListener(new PacketAdapter(RCadeAPI.getRCade(), PacketType.Play.Client.STEER_VEHICLE) {

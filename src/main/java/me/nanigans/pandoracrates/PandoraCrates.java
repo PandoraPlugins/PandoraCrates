@@ -11,6 +11,7 @@ import me.nanigans.pandoracrates.Commands.KeyTab;
 import me.nanigans.pandoracrates.Events.CrateClickEvents;
 import me.nanigans.pandoracrates.Utils.CustomizedObjectTypeAdapter;
 import me.nanigans.pandoracrates.Utils.Glow;
+import me.nanigans.pandoracrates.Utils.Packets.PacketInjector;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,6 +28,7 @@ public final class PandoraCrates extends JavaPlugin {
             .registerTypeAdapter(new TypeToken<Map<String, Object>>(){}.getType(),  new CustomizedObjectTypeAdapter());
     public HashMap map = new HashMap<>();
     public static EffectManager manager;
+    public static PacketInjector pj;
 
     @Override
     public void onEnable() {
@@ -38,6 +40,7 @@ public final class PandoraCrates extends JavaPlugin {
             this.setEnabled(false);
             return;
         }
+        pj = new PacketInjector();
 
         // Plugin startup logic
         getCommand("keygive").setExecutor(new KeyGive());
