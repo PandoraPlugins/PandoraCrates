@@ -55,6 +55,8 @@ public class KeyGive implements CommandExecutor {
                     return false;
                 }
 
+            }else{
+                sender.sendMessage(ChatColor.RED+"Invalid Permissions");
             }
 
         }
