@@ -100,6 +100,7 @@ public final class PandoraCrates extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         CrateSelector.getOpenCrates().forEach((i, j) -> j.forEach((l, m) -> {
+            m.getFinish().cancel();
             m.getKeyObj().addUse();
             Player player = m.getPlayer();
             int indx = player.getInventory().first(m.getKey());

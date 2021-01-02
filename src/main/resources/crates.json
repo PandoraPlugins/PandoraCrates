@@ -1,7 +1,9 @@
 {
   "_comment": "Command is the command to get the item to the player. **NO / at the start**",
   "_comment1": "Chance is the chance to get an item out of 100. Try to keep the entire crate out of 100",
+  "_comment2": "skull textures can be found from: https://minecraft-heads.com/custom-heads and find the value attribute at the bottom of the head page",
   "AllCrates": {
+    "timeToComplete": 30000,
     "invalidCrateBounceVelocity": 2.0,
     "Epic_Crate": {
       "Hologram_Name": "&cEpic Crate",

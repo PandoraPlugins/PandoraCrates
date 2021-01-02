@@ -1,5 +1,6 @@
 package me.nanigans.pandoracrates.Events;
 
+import me.nanigans.pandoracrates.Crates.CrateFinish;
 import me.nanigans.pandoracrates.Crates.CrateSelector;
 import me.nanigans.pandoracrates.Crates.Crates;
 import me.nanigans.pandoracrates.Crates.Key;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
 import java.util.UUID;
 
 public class CrateClickEvents implements Listener {
@@ -48,7 +50,8 @@ public class CrateClickEvents implements Listener {
                             }
                             if(CrateSelector.getOpenCrates().containsKey(event.getClickedBlock().getLocation())){
                                 if(!CrateSelector.getOpenCrates().get(event.getClickedBlock().getLocation()).isEmpty()){
-                                    player.sendMessage(ChatColor.RED+"Someone is already using this crate");
+                                    ConfigUtils.sendMessage("messages.crateInUse", player);
+                                    reverseVelocity(player);;
                                     return;
                                 }
                             }
@@ -59,8 +62,16 @@ public class CrateClickEvents implements Listener {
                                             ChatColor.translateAlternateColorCodes('&', crate.get("Hologram_Name").toString())));
 
 
-                            final CrateSelector crateSelector = new CrateSelector(player, crate, event.getClickedBlock().getLocation(), event.getItem());
+                            final CrateSelector crateSelector = new CrateSelector(player, crate, event.getClickedBlock().getLocation(), event.getItem(), null);
+                            final Object data = JsonUtil.getData("AllCrates.timeToComplete");
+                            if(data != null) {
+                                final CrateFinish crateFinish = new CrateFinish(crateSelector);
+                                Timer t = new Timer();
+                                t.schedule(crateFinish, Long.parseLong(data.toString()));
+                                crateSelector.setFinish(crateFinish);
+                            }
                             crateSelector.startSelector();
+
                             CrateSelector.getOpenCrates().put(event.getClickedBlock().getLocation(),
                                     new HashMap<UUID, CrateSelector>(){{put(player.getUniqueId(), crateSelector);}});
 

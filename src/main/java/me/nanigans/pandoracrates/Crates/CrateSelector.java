@@ -50,8 +50,10 @@ public class CrateSelector implements Listener {
     private final List<WarpEffect> chestWarps = new ArrayList<>();
     private final Key keyObj;
     private final static Map<Location, Map<UUID, CrateSelector>> openCrates = new HashMap<>();
+    private CrateFinish finish;
+    private boolean isDone = false;
 
-    public CrateSelector(Player player, Map<String, Object> crateData, Location loc, ItemStack key){
+    public CrateSelector(Player player, Map<String, Object> crateData, Location loc, ItemStack key, CrateFinish finisher) {
         this.player = player;
         this.data = crateData;
         this.key = key;
@@ -61,42 +63,43 @@ public class CrateSelector implements Listener {
         this.keyObj = new Key(key);
         PandoraCrates.pj.addPlayer(player);
         this.crateLoc = loc;
+        this.finish = finisher;
     }
 
     @EventHandler
-    public void leave(PlayerQuitEvent event){
+    public void leave(PlayerQuitEvent event) {
 
-        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+        if (event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
             keyObj.addUse();
             int indx = player.getInventory().first(this.key);
-            if(indx == -1){
+            if (indx == -1) {
                 this.key = keyObj.getKey();
                 player.getInventory().addItem(this.key);
-            }else player.getInventory().setItem(indx, this.keyObj.getKey());
+            } else player.getInventory().setItem(indx, this.keyObj.getKey());
             killAll();
         }
     }
 
     @EventHandler
-    public void commandSend(PlayerCommandPreprocessEvent event){
-
-        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+    public void commandSend(PlayerCommandPreprocessEvent event) {
+        if (event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatColor.RED+"You cannot use any commands while using a crate");
+            ConfigUtils.sendMessage("message.cannotSendCommands", event.getPlayer());
+            event.getPlayer().sendMessage(ChatColor.RED + "You cannot use any commands while using a crate");
         }
 
     }
 
     @EventHandler
-    public void dropItem(PlayerDropItemEvent event){
-        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
+    public void dropItem(PlayerDropItemEvent event) {
+        if (event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void dropItemInv(InventoryClickEvent event){
-        if(event.getWhoClicked().getUniqueId().equals(this.player.getUniqueId())) {
+    public void dropItemInv(InventoryClickEvent event) {
+        if (event.getWhoClicked().getUniqueId().equals(this.player.getUniqueId())) {
             if (event.getClick().toString().toLowerCase().contains("drop")) {
                 event.setCancelled(true);
             }
@@ -105,70 +108,75 @@ public class CrateSelector implements Listener {
     }
 
     @EventHandler
-    public void armorStandClick(PlayerInteractAtEntityEvent event){
+    public void armorStandClick(PlayerInteractAtEntityEvent event) {
 
-        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
-            event.setCancelled(true);
-            final Entity rightClicked = event.getRightClicked();
-            if(rightClicked instanceof ArmorStand){
-                if(rightClicked.getPassenger() == null) {
-                    final Map<String, Object> randomRewards = reward.getRandomRewards();
-                    ItemStack reward = ItemUtils.createItem(randomRewards.get("material").toString(), null);
-                    final Item item = player.getWorld().dropItem(player.getLocation(), reward);
-                    item.setPickupDelay(Integer.MAX_VALUE);
-                    rightClicked.setPassenger(item);
-                    item.setCustomName(ChatColor.translateAlternateColorCodes('&', randomRewards.get("displayName").toString()));
-                    item.setCustomNameVisible(true);
-                    this.reward.getRewardCmds().add(randomRewards);
-                    rightClicked.setCustomNameVisible(false);
+        final Entity rightClicked = event.getRightClicked();
+        if (rightClicked instanceof ArmorStand && (this.armorStands.contains(rightClicked) || Arrays.asList(clickedStands).contains(rightClicked))) {
+            if (!isDone) {
+                event.setCancelled(true);
+                if (event.getPlayer().getUniqueId().equals(this.player.getUniqueId())) {
+                    if (rightClicked.getPassenger() == null) {
+                        final Map<String, Object> randomRewards = reward.getRandomRewards();
+                        ItemStack reward = ItemUtils.createItem(randomRewards.get("material").toString(), null);
+                        final Item item = player.getWorld().dropItem(player.getLocation(), reward);
+                        item.setPickupDelay(Integer.MAX_VALUE);
+                        rightClicked.setPassenger(item);
+                        item.setCustomName(ChatColor.translateAlternateColorCodes('&', randomRewards.get("displayName").toString()));
+                        item.setCustomNameVisible(true);
+                        this.reward.getRewardCmds().add(randomRewards);
+                        rightClicked.setCustomNameVisible(false);
 
-                    ConfigUtils.sendMessage("messages.chestClick", player, "\\{item_name}:"+randomRewards.get("displayName"));
-                    ConfigUtils.playSound("sounds.rewardShow", player);
-                    StarEffect effect = new StarEffect(PandoraCrates.manager);
-                    effect.asynchronous = true;
-                    effect.type = EffectType.INSTANT;
-                    effect.innerRadius = 0.1F;
-                    effect.spikeHeight = 0.5F;
-                    effect.spikesHalf = 4;
-                    effect.particle = ParticleEffect.FIREWORKS_SPARK;
-                    effect.offset = new Vector(0, 1, 0);
-                    effect.setDynamicOrigin(new DynamicLocation(rightClicked));
-                    effect.start();
-                    this.clicksLeft--;
-                    clickedStands[clicksLeft] = ((ArmorStand) rightClicked);
-                    this.armorStands.remove(rightClicked);
+                        ConfigUtils.sendMessage("messages.chestClick", player, "\\{item_name}:" + randomRewards.get("displayName"));
+                        ConfigUtils.playSound("sounds.rewardShow", player);
+                        StarEffect effect = new StarEffect(PandoraCrates.manager);
+                        effect.asynchronous = true;
+                        effect.type = EffectType.INSTANT;
+                        effect.innerRadius = 0.1F;
+                        effect.spikeHeight = 0.5F;
+                        effect.spikesHalf = 4;
+                        effect.particle = ParticleEffect.FIREWORKS_SPARK;
+                        effect.offset = new Vector(0, 1, 0);
+                        effect.setDynamicOrigin(new DynamicLocation(rightClicked));
+                        effect.start();
+                        this.clicksLeft--;
+                        clickedStands[clicksLeft] = ((ArmorStand) rightClicked);
+                        this.armorStands.remove(rightClicked);
 
-                    if(this.clicksLeft == 0 || this.armorStands.size() == this.clickedStands.length){
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                endSelector();
-                            }
-                        }.runTaskLaterAsynchronously(plugin, 15);
+                        if (this.clicksLeft == 0 || this.armorStands.size() == this.clickedStands.length) {
+                            isDone = true;
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    endSelector();
+                                }
+                            }.runTaskLaterAsynchronously(plugin, 15);
+                        }
                     }
-                }
 
+                }
             }
         }
 
     }
 
-    public void killAll(){
-        if(sphere != null)
-        sphere.cancel();
-        if(warp != null)
-        warp.cancel();
+    public void killAll() {
+        if (this.finish != null)
+            this.finish.cancel();
+        if (sphere != null)
+            sphere.cancel();
+        if (warp != null)
+            warp.cancel();
         player.eject();
         HandlerList.unregisterAll(this);
-        if(chestWarps.size() > 0)
-        chestWarps.forEach(Effect::cancel);
-        if(stand != null)
-        stand.remove();
+        if (chestWarps.size() > 0)
+            chestWarps.forEach(Effect::cancel);
+        if (stand != null)
+            stand.remove();
         PandoraCrates.pj.removePlayer(player);
-        if(armorStands.size() > 0)
-        this.armorStands.forEach(Entity::remove);
+        if (armorStands.size() > 0)
+            this.armorStands.forEach(Entity::remove);
         for (ArmorStand clickedStand : clickedStands) {
-            if(clickedStand != null) {
+            if (clickedStand != null) {
                 clickedStand.remove();
                 clickedStand.getPassenger().remove();
             }
@@ -177,8 +185,10 @@ public class CrateSelector implements Listener {
 
     }
 
-    private void endSelector(){
-        if(player.isOnline()) {
+    private void endSelector() {
+        if (this.finish != null)
+            this.finish.cancel();
+        if (player.isOnline()) {
 
             for (ArmorStand armorStand : this.armorStands) {
 
@@ -203,8 +213,10 @@ public class CrateSelector implements Listener {
                 public void run() {
                     if (player.isOnline())
                         for (ArmorStand clickedStand : CrateSelector.this.clickedStands) {
-                            clickedStand.setGravity(true);
-                            clickedStand.setVelocity(player.getEyeLocation().toVector().subtract(clickedStand.getLocation().toVector()).normalize().divide(new Vector(2, 2, 2)));
+                            if (clickedStand != null) {
+                                clickedStand.setGravity(true);
+                                clickedStand.setVelocity(player.getEyeLocation().toVector().subtract(clickedStand.getLocation().toVector()).normalize().divide(new Vector(2, 2, 2)));
+                            }
                         }
 
                     new BukkitRunnable() {
@@ -230,50 +242,50 @@ public class CrateSelector implements Listener {
                 }
             }.runTaskLaterAsynchronously(plugin, 10);
 
-        }else killAll();
+        } else killAll();
     }
 
     private void giveRewards() {
-            if (player.isOnline()) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if(player.isOnline()) {
-                            if (player.isOnGround()) {
-                                this.cancel();
-                                ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
-                                for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
-                                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
-                                    final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
-                                    player.sendMessage(rewardMsg);
-                                }
-                                ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
+        if (player.isOnline()) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isOnline()) {
+                        if (player.isOnGround()) {
+                            this.cancel();
+                            ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
+                            for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                                Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                                final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
+                                player.sendMessage(rewardMsg);
                             }
-                        }else this.cancel();
-                    }
-                }.runTaskTimerAsynchronously(plugin, 10, 10);
-            } else {
-                for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
-                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                            ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
+                        }
+                    } else this.cancel();
                 }
+            }.runTaskTimerAsynchronously(plugin, 10, 10);
+        } else {
+            for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
             }
         }
+    }
 
 
-    public void startSelector(){
+    public void startSelector() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         player.setVelocity(new Vector(0, 1.5, 0));
         this.keyObj.removeUse();
         int indx = player.getInventory().first(this.key);
         player.getInventory().setItem(indx, this.keyObj.getKey());
-        if(this.keyObj.getUses() <= 0)
+        if (this.keyObj.getUses() <= 0)
             player.getInventory().setItem(indx, null);
         this.key = this.keyObj.getKey();
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                if(player.isOnline()) {
+                if (player.isOnline()) {
                     warp = new WarpEffect(PandoraCrates.manager);
                     warp.asynchronous = true;
                     warp.particle = ParticleEffect.SPELL;
@@ -326,7 +338,7 @@ public class CrateSelector implements Listener {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            if(player.isOnline()) {
+                            if (player.isOnline()) {
                                 for (ArmorStand armorStand : armorStands) {
                                     armorStand.setGravity(false);
                                     WarpEffect warpE = new WarpEffect(PandoraCrates.manager);
@@ -399,6 +411,14 @@ public class CrateSelector implements Listener {
 
     public ItemStack getKey() {
         return key;
+    }
+
+    public CrateFinish getFinish() {
+        return finish;
+    }
+
+    public void setFinish(CrateFinish finish) {
+        this.finish = finish;
     }
 
     public Key getKeyObj() {

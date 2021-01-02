@@ -44,7 +44,6 @@ public class Key {
             this.keyInfo = ((Map<String, Object>) crateInfo.get("key"));
             this.key = item;
             this.uses = Integer.parseInt(NBTData.getNBT(item, "USES"));
-        System.out.println("uses = " + uses);
     }
 
     public void addUse(){

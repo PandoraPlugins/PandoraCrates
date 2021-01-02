@@ -5,8 +5,13 @@
     "chestSummon": "Choose {choices_number} chests",
     "chestClick": "You have selected {item_name}",
     "rewardMsgTitle": "&c====&6Crate Rewards&c====",
-    "rewardMsgFooter": "&c===================="
+    "rewardMsgFooter": "&c====================",
+    "crateInUse": "Someone is already using this crate",
+    "cannotSendCommands": "You cannot send commands when opening a crate",
+    "timerRanOut": "You have ran out of time to open this crate"
   },
+  "_comment": "forPlayer means to player the sound only for the player or for the entire world.",
+  "_comment1": "Sounds can be found from: https://www.spigotmc.org/wiki/cc-sounds-list/ as the green sounds",
   "sounds": {
     "clickCrate":{
       "name": "ENDERDRAGON_WINGS",
@@ -34,6 +39,12 @@
     },
     "rewardGiven": {
       "name": "LEVEL_UP",
+      "volume": 10.0,
+      "pitch": 1.0,
+      "forPlayer": true
+    },
+    "timeUp":{
+      "name": "HORSE_ZOMBIE_DEATH",
       "volume": 10.0,
       "pitch": 1.0,
       "forPlayer": true
