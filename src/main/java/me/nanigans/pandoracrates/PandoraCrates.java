@@ -8,12 +8,14 @@ import me.nanigans.pandoracrates.Commands.CrateTab;
 import me.nanigans.pandoracrates.Commands.CreateCrate;
 import me.nanigans.pandoracrates.Commands.KeyGive;
 import me.nanigans.pandoracrates.Commands.KeyTab;
+import me.nanigans.pandoracrates.Crates.CrateSelector;
 import me.nanigans.pandoracrates.Events.CrateClickEvents;
 import me.nanigans.pandoracrates.Utils.CustomizedObjectTypeAdapter;
 import me.nanigans.pandoracrates.Utils.Glow;
 import me.nanigans.pandoracrates.Utils.Packets.PacketInjector;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -97,5 +99,14 @@ public final class PandoraCrates extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        CrateSelector.getOpenCrates().forEach((i, j) -> j.forEach((l, m) -> {
+            m.getKeyObj().addUse();
+            Player player = m.getPlayer();
+            int indx = player.getInventory().first(m.getKey());
+            if(indx == -1){
+                player.getInventory().addItem(m.getKeyObj().getKey());
+            }else player.getInventory().setItem(indx, m.getKeyObj().getKey());
+            m.killAll();
+        }));
     }
 }

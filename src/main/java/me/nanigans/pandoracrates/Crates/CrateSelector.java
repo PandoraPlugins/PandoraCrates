@@ -20,7 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -33,10 +32,7 @@ import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class CrateSelector implements Listener {
     private final Player player;
@@ -49,11 +45,13 @@ public class CrateSelector implements Listener {
     private final List<ArmorStand> armorStands = new ArrayList<>();
     private final Reward reward;
     private int clicksLeft;
+    private final Location crateLoc;
     private final ArmorStand[] clickedStands;
     private final List<WarpEffect> chestWarps = new ArrayList<>();
     private final Key keyObj;
+    private final static Map<Location, Map<UUID, CrateSelector>> openCrates = new HashMap<>();
 
-    public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
+    public CrateSelector(Player player, Map<String, Object> crateData, Location loc, ItemStack key){
         this.player = player;
         this.data = crateData;
         this.key = key;
@@ -62,6 +60,7 @@ public class CrateSelector implements Listener {
         this.clickedStands = new ArmorStand[clicksLeft];
         this.keyObj = new Key(key);
         PandoraCrates.pj.addPlayer(player);
+        this.crateLoc = loc;
     }
 
     @EventHandler
@@ -154,14 +153,19 @@ public class CrateSelector implements Listener {
 
     }
 
-    private void killAll(){
+    public void killAll(){
+        if(sphere != null)
         sphere.cancel();
+        if(warp != null)
         warp.cancel();
         player.eject();
         HandlerList.unregisterAll(this);
+        if(chestWarps.size() > 0)
         chestWarps.forEach(Effect::cancel);
+        if(stand != null)
         stand.remove();
         PandoraCrates.pj.removePlayer(player);
+        if(armorStands.size() > 0)
         this.armorStands.forEach(Entity::remove);
         for (ArmorStand clickedStand : clickedStands) {
             if(clickedStand != null) {
@@ -169,6 +173,8 @@ public class CrateSelector implements Listener {
                 clickedStand.getPassenger().remove();
             }
         }
+        openCrates.get(this.crateLoc).remove(player.getUniqueId());
+
     }
 
     private void endSelector(){
@@ -216,6 +222,7 @@ public class CrateSelector implements Listener {
                                     clickedStand.getPassenger().remove();
                                 }
                             }
+                            openCrates.get(CrateSelector.this.crateLoc).remove(player.getUniqueId());
                             giveRewards();
                             ConfigUtils.playSound("sounds.rewardGiven", player);
                         }
@@ -266,77 +273,81 @@ public class CrateSelector implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                warp = new WarpEffect(PandoraCrates.manager);
-                warp.asynchronous = true;
-                warp.particle = ParticleEffect.SPELL;
-                warp.grow = 0;
-                warp.offset = new Vector(0, -1.4, 0);
-                warp.setDynamicOrigin(new DynamicLocation(player));
-                warp.radius = 0.5F;
-                warp.infinite();
-                warp.start();
+                if(player.isOnline()) {
+                    warp = new WarpEffect(PandoraCrates.manager);
+                    warp.asynchronous = true;
+                    warp.particle = ParticleEffect.SPELL;
+                    warp.grow = 0;
+                    warp.offset = new Vector(0, -1.4, 0);
+                    warp.setDynamicOrigin(new DynamicLocation(player));
+                    warp.radius = 0.5F;
+                    warp.infinite();
+                    warp.start();
 
-                sphere = new SphereEffect(PandoraCrates.manager);
-                sphere.radius = 3.5F;
-                sphere.asynchronous = true;
-                sphere.particle = ParticleEffect.REDSTONE;
-                sphere.color = Color.fromRGB(211, 211, 211);
-                sphere.particles = 100;
-                sphere.setDynamicOrigin(new DynamicLocation(player));
-                sphere.infinite();
-                sphere.start();
+                    sphere = new SphereEffect(PandoraCrates.manager);
+                    sphere.radius = 3.5F;
+                    sphere.asynchronous = true;
+                    sphere.particle = ParticleEffect.REDSTONE;
+                    sphere.color = Color.fromRGB(211, 211, 211);
+                    sphere.particles = 100;
+                    sphere.setDynamicOrigin(new DynamicLocation(player));
+                    sphere.infinite();
+                    sphere.start();
 
-                final Location location = player.getLocation();
-                stand = player.getWorld().spawn(location, ArmorStand.class);
-                stand.setGravity(false);
-                stand.setVisible(false);
-                stand.setPassenger(player);
-
-                final int amount = Integer.parseInt(data.get("Crate_Chest_Number").toString());
-                final List<Location> locations = circleParts(location.add(0, 2, 0), 2, amount);
-                final Vector pVec = player.getLocation().toVector();
-
-                final ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
-                final Location pLoc = player.getEyeLocation();
-                pLoc.add(0, 3, 0);
-                for (final Location loc : locations) {
-                    ArmorStand stand = loc.getWorld().spawn(pLoc, ArmorStand.class);
-                    stand.setHelmet(item);
+                    final Location location = player.getLocation();
+                    stand = player.getWorld().spawn(location, ArmorStand.class);
+                    stand.setGravity(false);
                     stand.setVisible(false);
-                    stand.setSmall(true);
-                    stand.setCustomName("Click Me!");
-                    stand.setCustomNameVisible(true);
-                    final Vector vector = loc.toVector().subtract(new Vector(0, 2, 0));
-                    final Vector facing = pVec.clone().subtract(vector).normalize();
-                    final double yaw = -Math.atan2(facing.getX(), facing.getZ());
-                    final double pitch = -Math.atan2(facing.getY(), Math.hypot(facing.getX(), facing.getZ()));
-                    stand.setHeadPose(new EulerAngle(pitch, yaw, 0));
-                    stand.setVelocity(facing.multiply(-0.5));
-                    armorStands.add(stand);
+                    stand.setPassenger(player);
+
+                    final int amount = Integer.parseInt(data.get("Crate_Chest_Number").toString());
+                    final List<Location> locations = circleParts(location.add(0, 2, 0), 2, amount);
+                    final Vector pVec = player.getLocation().toVector();
+
+                    final ItemStack item = createCustomHead(data.get("Skull_TextureValue").toString());
+                    final Location pLoc = player.getEyeLocation();
+                    pLoc.add(0, 3, 0);
+                    for (final Location loc : locations) {
+                        ArmorStand stand = loc.getWorld().spawn(pLoc, ArmorStand.class);
+                        stand.setHelmet(item);
+                        stand.setVisible(false);
+                        stand.setSmall(true);
+                        stand.setCustomName("Click Me!");
+                        stand.setCustomNameVisible(true);
+                        final Vector vector = loc.toVector().subtract(new Vector(0, 2, 0));
+                        final Vector facing = pVec.clone().subtract(vector).normalize();
+                        final double yaw = -Math.atan2(facing.getX(), facing.getZ());
+                        final double pitch = -Math.atan2(facing.getY(), Math.hypot(facing.getX(), facing.getZ()));
+                        stand.setHeadPose(new EulerAngle(pitch, yaw, 0));
+                        stand.setVelocity(facing.multiply(-0.5));
+                        armorStands.add(stand);
+
+                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if(player.isOnline()) {
+                                for (ArmorStand armorStand : armorStands) {
+                                    armorStand.setGravity(false);
+                                    WarpEffect warpE = new WarpEffect(PandoraCrates.manager);
+                                    warpE.asynchronous = true;
+                                    warpE.particle = ParticleEffect.SPELL;
+                                    warpE.particles = 5;
+                                    warpE.radius = 0.25F;
+                                    warpE.offset = new Vector(0, -0.5, 0);
+                                    warpE.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
+                                    warpE.grow = 0;
+                                    warpE.infinite();
+                                    warpE.start();
+                                    chestWarps.add(warpE);
+                                }
+                                ConfigUtils.sendMessage("messages.chestSummon", player, "\\{choices_number}:" + CrateSelector.this.clicksLeft);
+                                ConfigUtils.playSound("sounds.chestSummon", player);
+                            }
+                        }
+                    }.runTaskLaterAsynchronously(plugin, 10);
 
                 }
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        for (ArmorStand armorStand : armorStands) {
-                            armorStand.setGravity(false);
-                            WarpEffect warpE = new WarpEffect(PandoraCrates.manager);
-                            warpE.asynchronous = true;
-                            warpE.particle = ParticleEffect.SPELL;
-                            warpE.particles = 5;
-                            warpE.radius = 0.25F;
-                            warpE.offset = new Vector(0, -0.5, 0);
-                            warpE.setDynamicOrigin(new DynamicLocation(armorStand.getEyeLocation()));
-                            warpE.grow = 0;
-                            warpE.infinite();
-                            warpE.start();
-                            chestWarps.add(warpE);
-                        }
-                        ConfigUtils.sendMessage("messages.chestSummon", player, "\\{choices_number}:"+CrateSelector.this.clicksLeft);
-                        ConfigUtils.playSound("sounds.chestSummon", player);
-                    }
-                }.runTaskLaterAsynchronously(plugin, 10);
-
             }
         }.runTaskLater(plugin, 20);
 
@@ -377,6 +388,22 @@ public class CrateSelector implements Listener {
         return skull;
     }
 
+
+    public static Map<Location, Map<UUID, CrateSelector>> getOpenCrates() {
+        return openCrates;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public ItemStack getKey() {
+        return key;
+    }
+
+    public Key getKeyObj() {
+        return keyObj;
+    }
 
     public Map<String, Object> getData() {
         return data;

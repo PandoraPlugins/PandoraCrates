@@ -14,7 +14,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class CrateClickEvents implements Listener {
 
@@ -44,13 +46,24 @@ public class CrateClickEvents implements Listener {
                                 reverseVelocity(player);
                                 return;
                             }
+                            if(CrateSelector.getOpenCrates().containsKey(event.getClickedBlock().getLocation())){
+                                if(!CrateSelector.getOpenCrates().get(event.getClickedBlock().getLocation()).isEmpty()){
+                                    player.sendMessage(ChatColor.RED+"Someone is already using this crate");
+                                    return;
+                                }
+                            }
                             final Map<String, Object> crate = (Map<String, Object>) crates.get(nbt);
 
                             ConfigUtils.sendMessage("messages.openCrate", player,
                                     "\\{crate_name}:"+ChatColor.stripColor(
                                             ChatColor.translateAlternateColorCodes('&', crate.get("Hologram_Name").toString())));
-                            final CrateSelector crateSelector = new CrateSelector(player, crate, name, event.getItem());
+
+
+                            final CrateSelector crateSelector = new CrateSelector(player, crate, event.getClickedBlock().getLocation(), event.getItem());
                             crateSelector.startSelector();
+                            CrateSelector.getOpenCrates().put(event.getClickedBlock().getLocation(),
+                                    new HashMap<UUID, CrateSelector>(){{put(player.getUniqueId(), crateSelector);}});
+
 
                         }else{
                             reverseVelocity(player);
