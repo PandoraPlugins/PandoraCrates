@@ -41,7 +41,6 @@ import java.util.UUID;
 public class CrateSelector implements Listener {
     private final Player player;
     private final Map<String, Object> data;
-    private final String name;
     private ItemStack key;
     private WarpEffect warp;
     private SphereEffect sphere;
@@ -57,7 +56,6 @@ public class CrateSelector implements Listener {
     public CrateSelector(Player player, Map<String, Object> crateData, String crateName, ItemStack key){
         this.player = player;
         this.data = crateData;
-        this.name = crateName;
         this.key = key;
         this.clicksLeft = Integer.parseInt(((Map<String, Object>) crateData.get("key")).get("rewardsPerKey").toString());
         this.reward = new Reward(this);
@@ -233,17 +231,18 @@ public class CrateSelector implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        if (player.isOnGround()) {
-                            this.cancel();
-
-                            ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
-                            for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
-                                Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
-                                final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
-                                player.sendMessage(rewardMsg);
+                        if(player.isOnline()) {
+                            if (player.isOnGround()) {
+                                this.cancel();
+                                ConfigUtils.sendMessage("messages.rewardMsgTitle", player);
+                                for (Map<String, Object> rewardCmd : CrateSelector.this.reward.getRewardCmds()) {
+                                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), rewardCmd.get("command").toString().replaceAll("\\{player}", player.getName()));
+                                    final String rewardMsg = ChatColor.translateAlternateColorCodes('&', rewardCmd.get("rewardMsg").toString());
+                                    player.sendMessage(rewardMsg);
+                                }
+                                ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
                             }
-                            ConfigUtils.sendMessage("messages.rewardMsgFooter", player);
-                        }
+                        }else this.cancel();
                     }
                 }.runTaskTimerAsynchronously(plugin, 10, 10);
             } else {
@@ -357,52 +356,6 @@ public class CrateSelector implements Listener {
 
     }
 
-//    @EventHandler
-//    public void sneakEvent(PlayerToggleSneakEvent event){
-//
-//        if(event.getPlayer().getUniqueId().equals(this.player.getUniqueId())){
-//
-//            stand.remove();
-//            warp.cancel();
-//            sphere.cancel();
-//            chestWarps.forEach(Effect::cancel);
-//            this.armorStands.forEach(i -> {
-//                if(i.getPassenger() != null){
-//                    i.getPassenger().remove();
-//                }
-//                i.remove();
-//            });
-//            HandlerList.unregisterAll(this);
-//
-//        }
-//
-//    }
-
-    /* Prevent player from dismounting
-    getProtocolManager().addPacketListener(new PacketAdapter(RCadeAPI.getRCade(), PacketType.Play.Client.STEER_VEHICLE) {
-    @Override
-    public void onPacketReceiving (com.comphenix.protocol.events.PacketEvent e) {
-        if(e.getPacketType() == PacketType.Play.Client.STEER_VEHICLE) {
-            if(e.getPacket().getHandle() instanceof PacketPlayInSteerVehicle) {
-                Field f = null;
-                try {
-                    f = PacketPlayInSteerVehicle.class.getDeclaredField("d");
-                    f.setAccessible(true);
-                    f.set(e.getPacket().getHandle(), false);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onPacketSending (com.comphenix.protocol.events.PacketEvent e) {}
-});
-     */
-
-
-
     public ItemStack createCustomHead(String value) {
         String signature = "H116D5fhmj/7BVWqiRQilXmvoJO6wJzXH4Dvou6P2o9YMb+HaJT8s9+zt03GMYTipzK+NsW2D2JfzagnxLUTuiOtrCHm6V2udOM0HG0JeL4zR0Wn5oHmu+S7kUPUbt7HVlKaRXry5bobFQ06nUf7hOV3kPfpUJsfMajfabmoJ9RGMRVot3uQszjKOHQjxyAjfHP2rjeI/SktBrSscx0DzwBW9LCra7g/6Cp7/xPQTIZsqz2Otgp6i2h3YpXJPy02j4pIk0H4biR3CaU7FB0V4/D1Hvjd08giRvUpqF0a1w9rbpIWIH5GTUP8eLFdG/9SnHqMCQrTj4KkQiN0GdBO18JvJS/40LTn3ZLag5LBIa7AyyGus27N3wdIccvToQ6kHHRVpW7cUSXjircg3LOsSQbJmfLoVJ/KAF/m+de4PxIjOJIcbiOkVyQfMQltPg26VzRiu3F0qRvJNAAydH8AHdaqhkpSf6yjHqPU3p3BHFJld5o59WoD4WNkE3wOC//aTpV/f9RJ0JQko08v2mGBVKx7tpN7vHD1qD5ILzV1nDCV1/qbKgiOK9QmdXqZw9J3pM/DHtZ6eiRKni9BuGWlbWFN/qfFO2xY+J7SYFqTxBbffmvwvuF83QP5UdRTNVLYoV5S+yR5ac7fVWUZmLbq7tawyuCu0Dw24M9E1BSnpSc=";
 
@@ -425,19 +378,8 @@ public class CrateSelector implements Listener {
     }
 
 
-    public Player getPlayer() {
-        return player;
-    }
-
     public Map<String, Object> getData() {
         return data;
     }
 
-    public static PandoraCrates getPlugin() {
-        return plugin;
-    }
-
-    public List<ArmorStand> getArmorStands() {
-        return armorStands;
-    }
 }
