@@ -308,6 +308,7 @@ public class CrateSelector implements Listener {
                         final Location openLoc = getOpenLoc();
                         openLoc.setYaw(player.getLocation().getYaw());
                         openLoc.setPitch(player.getLocation().getPitch());
+                        System.out.println("openLoc = " + openLoc);
                         player.teleport(openLoc);
                     }
                     warp = new WarpEffect(PandoraCrates.manager);
@@ -319,6 +320,7 @@ public class CrateSelector implements Listener {
                     warp.radius = 0.5F;
                     warp.infinite();
                     warp.start();
+                    System.out.println("warp = " + warp);
 
                     sphere = new SphereEffect(PandoraCrates.manager);
                     sphere.radius = 3.5F;

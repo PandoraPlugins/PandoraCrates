@@ -1,8 +1,7 @@
 package me.nanigans.pandoracrates.Crates;
 
-import com.gmail.filoghost.holographicdisplays.HolographicDisplays;
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.nanigans.pandoracrates.PandoraCrates;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_8_R3.BlockPosition;
@@ -37,8 +36,10 @@ public class Crates {
 
         final int height = Integer.parseInt(crateInfo.get("Hologram_Height").toString());
 
-        Hologram hologram = HologramsAPI.createHologram(plugin, loc.add(0, height, 0));
-        hologram.appendTextLine(ChatColor.translateAlternateColorCodes('&', crateInfo.get("Hologram_Name").toString()));
+
+        Hologram hologram = HolographicDisplaysAPI.get(plugin).createHologram(loc.add(0, height, 0));
+
+        hologram.getLines().appendText(ChatColor.translateAlternateColorCodes('&', crateInfo.get("Hologram_Name").toString()));
         return chest;
 
     }

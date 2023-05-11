@@ -3,7 +3,7 @@ version: ${project.version}
 main: me.nanigans.pandoracrates.PandoraCrates
 authors: [ProNanigans]
 description: Pandora Crates plugin
-depend: [HolographicDisplays]
+softdepend: [HolographicDisplays]
 commands:
   keygive:
     usage: /keygive <player> <key name> <amount>

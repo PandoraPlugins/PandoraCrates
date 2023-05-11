@@ -28,7 +28,7 @@ import java.util.Map;
 public final class PandoraCrates extends JavaPlugin {
     GsonBuilder gsonBuilder = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<Map<String, Object>>(){}.getType(),  new CustomizedObjectTypeAdapter());
-    public HashMap map = new HashMap<>();
+    public Map map = new HashMap<>();
     public static EffectManager manager;
     public static PacketInjector pj;
 

@@ -13,9 +13,9 @@
       "Chest_Name": "Click Me!",
       "_comment": "set below to 'null' to open the crate where the player stands",
       "openCrateLocation":{
-        "x": 478,
-        "y": 101,
-        "z": 159
+        "x": 227,
+        "y": 120,
+        "z": 223
       },
       "rewards": {
         "1": {
